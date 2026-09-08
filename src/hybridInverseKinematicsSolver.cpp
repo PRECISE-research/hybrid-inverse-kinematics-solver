@@ -495,13 +495,27 @@ int main(int argc, char** argv) {
 			std::vector<std::string> coordNames = coordinatesData.getColumnLabels();
 			for (auto i(0); i < coordNames.size(); i++) {
 				std::string name = coordNames[i];
+				// inDegrees applies to rotational coordinates only. Translational
+				// coordinates are in metres and must not be scaled -- converting them
+				// shrinks the prescribed value by 180/pi. This mirrors the motion-type
+				// check already used when writing results out.
+				int coordIndex = coordSet.getIndex(name);
+				bool isRotational = (coordIndex >= 0) &&
+					(coordSet[coordIndex].getMotionType() == OpenSim::Coordinate::MotionType::Rotational);
+
 				double value;
-				if (ikCfg.inDegrees)
+				if (ikCfg.inDegrees && isRotational)
 					value = SimTK::convertDegreesToRadians(coords[i]);
 				else
 					value = coords[i];
 
-				ikSolver.updateCoordinateReference(name, value);
+				// updateCoordinateReference's third parameter defaults to 1.0, so calling
+				// it without a weight silently discards the weight set on the
+				// CoordinateReference at construction, every frame. Pass it through.
+				auto weightIt = ikCfg.coordinatesWeights.find(name);
+				double coordWeight = (weightIt != ikCfg.coordinatesWeights.end())
+					? weightIt->second : 1.0;
+				ikSolver.updateCoordinateReference(name, value, coordWeight);
 			}
 		}
 
