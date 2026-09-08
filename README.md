@@ -1,5 +1,7 @@
 # hybrid-inverse-kinematics-solver
 
+[![Build and Test](https://github.com/PRECISE-research/hybrid-inverse-kinematics-solver/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/PRECISE-research/hybrid-inverse-kinematics-solver/actions/workflows/continuous_integration.yml)
+
 A command-line tool that runs an OpenSim `InverseKinematicsSolver` over any
 combination of **markers**, **IMU/segment orientations**, and **prescribed
 coordinates** in a single solve, driven by one XML setup file.
@@ -155,6 +157,27 @@ Do not reach for that to turn a red test green without reading what it was
 reporting first — the failure message names the column and row that moved.
 
 Configure with `-DBUILD_TESTING=OFF` to skip the tests, e.g. without Python.
+
+## Continuous integration
+
+Every push runs `.github/workflows/continuous_integration.yml` on a Windows
+runner: configure, Release build, all 12 tests, and a bundling install that
+proves the executable's DLL set is complete. OpenSim 4.5.2 is downloaded once,
+pruned to ~80 MB, and cached -- later runs restore it in seconds. The golden
+references were produced with OpenSim 4.4; 4.5.2 reproduces them bit-for-bit,
+which is why CI can use it.
+
+### Cutting a release
+
+1. Bump `project(VERSION X.Y.Z)` in `CMakeLists.txt` -- the tool's banner
+   prints this, and the release workflow refuses a tag that disagrees with it.
+2. `git tag X.Y.Z && git push origin X.Y.Z`
+
+The tag triggers `.github/workflows/github_release.yml`, which rebuilds, reruns
+the full test suite, and attaches
+`hybrid-inverse-kinematics-solver-X.Y.Z-windows-x64.zip` to a GitHub release.
+The zip is self-contained -- unzip anywhere and run the exe, no OpenSim
+installation needed. A tag like `X.Y.Z-rc1` publishes as a prerelease.
 
 ## Examples
 

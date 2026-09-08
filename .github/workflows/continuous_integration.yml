@@ -1,0 +1,131 @@
+name: Build and Test
+
+on:
+  push:
+    # Branches only: a version tag triggers github_release.yml, which runs the
+    # same build and tests itself, so a bare `on: push` would run everything twice.
+    branches: ['**']
+
+jobs:
+  build:
+    # Pinned to windows-2022, not windows-latest: the OpenSim package below is
+    # built for the win2022 image, and windows-latest will eventually move.
+    runs-on: windows-2022
+
+    env:
+      OPENSIM_VERSION: 4.5.2
+      # The asset name embeds a build date and commit, so the URL cannot be
+      # derived from the version alone.
+      OPENSIM_URL: https://github.com/opensim-org/opensim-core/releases/download/4.5.2/opensim-core-4.5.2-2025-04-14-fb5fac1-win2022.zip
+      # Space-free on purpose; paths like "C:/OpenSim 4.5" need quoting everywhere.
+      OPENSIM_ROOT: ${{ github.workspace }}/.deps/opensim
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pinned rather than left to whatever is on PATH: CMake's find_package(Python3)
+      # and the PATH python are two independent choices, and when they disagree the
+      # tests are silently configured out. The interpreter is passed to CMake
+      # explicitly below. The tests use the stdlib only, so there is no pip step.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ~80 MB after pruning, restored in seconds. No restore-keys: a prefix match
+      # could hand back a tree pruned under an older list, so it is exact or nothing.
+      # If you change the prune list below, bump "-prune1" here AND in
+      # github_release.yml (they share this cache).
+      - name: Cache OpenSim
+        id: opensim-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.OPENSIM_ROOT }}
+          key: opensim-${{ env.OPENSIM_VERSION }}-win2022-prune1
+
+      # Cache miss only. The 413 MB extracted tree is pruned to ~80 MB: Java/Python
+      # bindings, docs, example code, Moco's Ipopt/CasADi solver stack, Intel
+      # Fortran runtimes and bundled tools, none of which this executable loads.
+      # osimMoco.dll/.lib stay - OpenSim's CMake config checks they exist.
+      - name: Download and prune OpenSim
+        if: steps.opensim-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'  # progress rendering slows big downloads
+          $zip = "$env:RUNNER_TEMP/opensim.zip"
+          Invoke-WebRequest $env:OPENSIM_URL -OutFile $zip
+          Write-Host "Downloaded $([math]::Round((Get-Item $zip).Length / 1MB)) MB"
+
+          # ExtractToDirectory, not Expand-Archive: far faster on an archive this
+          # size and it does not trip over long paths.
+          $staging = "$env:RUNNER_TEMP/opensim-extracted"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $staging)
+
+          # The win2022 asset is a zip wrapping a single inner zip, so unwrap again
+          # when that is all that came out.
+          $inner = @(Get-ChildItem $staging -File -Filter *.zip)
+          if ($inner.Count -eq 1) {
+            Write-Host "Unwrapping inner archive: $($inner[0].Name)"
+            $staging = "$env:RUNNER_TEMP/opensim-inner"
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($inner[0].FullName, $staging)
+          }
+
+          # Find the SDK root by locating its CMake config at whatever depth the
+          # archive nests it, rather than assuming a layout.
+          $config = Get-ChildItem $staging -Recurse -Filter OpenSimConfig.cmake -File |
+            Select-Object -First 1
+          if (-not $config) {
+            Write-Host "Directories in the extracted tree:"
+            Get-ChildItem $staging -Recurse -Depth 2 -Directory |
+              ForEach-Object { Write-Host "  $($_.FullName)" }
+            throw "OpenSimConfig.cmake not found in the archive - layout changed?"
+          }
+          # <root>/cmake/OpenSimConfig.cmake -> <root>
+          $root = Split-Path (Split-Path $config.FullName -Parent) -Parent
+          Write-Host "OpenSim root: $root"
+
+          foreach ($item in @(
+              'Resources', 'sdk/Python', 'sdk/Java', 'sdk/doc',
+              'sdk/lib/osimJavaJNI.lib', 'bin/osimJavaJNI.dll', 'bin/glut32.dll',
+              'bin/ipopt-3.dll', 'bin/sipopt-3.dll', 'bin/ipoptamplinterface-3.dll',
+              'bin/coinmumps-3.dll', 'bin/svml_dispmd.dll', 'bin/libmmd.dll',
+              'bin/libifcoremd.dll', 'bin/libiomp5md.dll')) {
+            Remove-Item -Recurse -Force "$root/$item" -ErrorAction Ignore
+          }
+          Remove-Item -Force "$root/bin/casadi*.dll", "$root/bin/*.exe" -ErrorAction Ignore
+          New-Item -ItemType Directory -Force (Split-Path $env:OPENSIM_ROOT) | Out-Null
+          Move-Item $root $env:OPENSIM_ROOT
+          $mb = [math]::Round((Get-ChildItem $env:OPENSIM_ROOT -Recurse -File |
+            Measure-Object Length -Sum).Sum / 1MB)
+          Write-Host "Pruned OpenSim tree: $mb MB (cached for future runs)"
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          # Forward slashes: a backslash inside a -D argument is an escape to CMake.
+          $python = (Get-Command python).Source.Replace('\', '/')
+          $opensim = "$env:OPENSIM_ROOT".Replace('\', '/')
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            "-DOpenSim_DIR=$opensim/cmake" `
+            "-DPython3_EXECUTABLE=$python"
+
+      # Release, not Debug: the OpenSim package ships release import libraries
+      # only, so a Debug build does not link.
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel ([Environment]::ProcessorCount)
+
+      # --no-tests=error: if configure had not found Python it would define ZERO
+      # tests and a bare ctest would pass green. Make that a red run instead.
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build -C Release --output-on-failure --no-tests=error
+
+      # install() resolves every DLL the exe imports via RUNTIME_DEPENDENCIES and
+      # hard-fails if one is missing, so this step is what proves the pruned
+      # OpenSim cache above still contains everything the binary needs.
+      - name: Install (validates the pruned OpenSim tree)
+        shell: pwsh
+        run: cmake --install build --config Release --prefix install
