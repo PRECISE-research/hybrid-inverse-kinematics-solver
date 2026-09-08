@@ -226,6 +226,16 @@ produced with it, cite OpenSim as well as this repository:
 XML parsing uses [RapidXML](http://rapidxml.sourceforge.net/) 1.13, vendored
 under `external/rapidxml/` (Boost Software Licence / MIT).
 
+## License
+
+MIT -- see [LICENSE](LICENSE), which also states the carve-out for third-party
+material: RapidXML is vendored under `external/rapidxml/` under its own terms,
+and the release archives bundle OpenSim and Simbody/SimTK under Apache-2.0.
+
+Cite this tool via [CITATION.cff](CITATION.cff) (GitHub renders a "Cite this
+repository" button from it), and cite OpenSim alongside it -- see
+[Related work](#related-work).
+
 ## Examples
 
 Run any of them with `-S`; each writes `ik_results.sto` beside its setup file.

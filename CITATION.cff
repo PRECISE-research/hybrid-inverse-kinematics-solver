@@ -1,0 +1,105 @@
+cff-version: 1.2.0
+message: "If you use this software in your work, please cite it as below."
+title: "hybrid-inverse-kinematics-solver"
+abstract: >-
+  A command-line tool that runs an OpenSim InverseKinematicsSolver over any
+  combination of markers, IMU or segment orientations, and prescribed
+  coordinates in a single solve, described by one XML setup file. The stock
+  OpenSim inverse kinematics tool tracks markers or orientations but not both,
+  and cannot prescribe coordinates from an external file alongside them.
+type: software
+
+authors:
+  - family-names: "Hambly"
+    given-names: "Matthew"
+    affiliation: "Griffith University"
+    orcid: "https://orcid.org/0000-0002-6258-2558"
+
+repository-code: "https://github.com/PRECISE-research/hybrid-inverse-kinematics-solver"
+
+license: "MIT"
+
+version: "1.0.0"
+date-released: "2026-09-08"
+
+keywords:
+  - inverse kinematics
+  - OpenSim
+  - biomechanics
+  - musculoskeletal modelling
+  - inertial measurement unit
+  - motion capture
+
+# The modelling and the solver itself are OpenSim's work; this tool is a layer
+# over them. Cite these alongside the software above.
+references:
+  - type: article
+    title: "OpenSim: open-source software to create and analyze dynamic simulations of movement"
+    authors:
+      - family-names: "Delp"
+        given-names: "Scott L."
+      - family-names: "Anderson"
+        given-names: "Frank C."
+      - family-names: "Arnold"
+        given-names: "Allison S."
+      - family-names: "Loan"
+        given-names: "Peter"
+      - family-names: "Habib"
+        given-names: "Ayman"
+      - family-names: "John"
+        given-names: "Chand T."
+      - family-names: "Guendelman"
+        given-names: "Eran"
+      - family-names: "Thelen"
+        given-names: "Darryl G."
+    journal: "IEEE Transactions on Biomedical Engineering"
+    year: 2007
+    volume: 54
+    issue: 11
+    start: 1940
+    end: 1950
+    doi: "10.1109/TBME.2007.901024"
+  - type: article
+    title: >-
+      OpenSim: Simulating musculoskeletal dynamics and neuromuscular control to
+      study human and animal movement
+    authors:
+      - family-names: "Seth"
+        given-names: "Ajay"
+      - family-names: "Hicks"
+        given-names: "Jennifer L."
+      - family-names: "Uchida"
+        given-names: "Thomas K."
+      - family-names: "Habib"
+        given-names: "Ayman"
+      - family-names: "Dembia"
+        given-names: "Christopher L."
+      - family-names: "Dunne"
+        given-names: "James J."
+      - family-names: "Ong"
+        given-names: "Carmichael F."
+      - family-names: "DeMers"
+        given-names: "Matthew S."
+      - family-names: "Rajagopal"
+        given-names: "Apoorva"
+      - family-names: "Millard"
+        given-names: "Matthew"
+      - family-names: "Hamner"
+        given-names: "Samuel R."
+      - family-names: "Arnold"
+        given-names: "Edith M."
+      - family-names: "Yong"
+        given-names: "Jennifer R."
+      - family-names: "Lakshmikanth"
+        given-names: "Shrinidhi K."
+      - family-names: "Sherman"
+        given-names: "Michael A."
+      - family-names: "Ku"
+        given-names: "Joy P."
+      - family-names: "Delp"
+        given-names: "Scott L."
+    journal: "PLOS Computational Biology"
+    year: 2018
+    volume: 14
+    issue: 7
+    doi: "10.1371/journal.pcbi.1006223"
