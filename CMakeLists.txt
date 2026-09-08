@@ -30,6 +30,12 @@ project(hybrid-inverse-kinematics-solver
     LANGUAGES CXX
 )
 
+# Group targets into folders in IDEs that support it, so Visual Studio's Solution
+# Explorer shows Executables/ and Tests/ rather than a flat list mixed in with
+# ALL_BUILD and ZERO_CHECK. On by default from CMake 3.26 (CMP0143), set
+# explicitly so it survives someone lowering the minimum.
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # Let find_package() see our cmake/FindRapidXML.cmake.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -76,9 +82,27 @@ include(GNUInstallDirs)
 
 add_subdirectory(src)
 
+# CMAKE_FOLDER supplies the default FOLDER for every target created from here
+# down, which covers both CTest's dashboard targets (Continuous, Experimental,
+# Nightly...) and our own helpers in tests/, without naming each one.
+set(CMAKE_FOLDER "Tests")
+
 # Defines BUILD_TESTING (ON by default). Configure with -DBUILD_TESTING=OFF to
 # skip the suite, e.g. on a machine without Python.
 include(CTest)
+
+# include(CTest) hardcodes FOLDER "CTestDashboardTargets" on the targets it
+# creates, which beats CMAKE_FOLDER, so they would sit at the top of the
+# solution. Re-home them under Tests/ by looking for that folder rather than
+# listing target names, which change between CMake versions.
+get_property(_ctest_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+foreach(_target IN LISTS _ctest_targets)
+    get_target_property(_folder ${_target} FOLDER)
+    if(_folder STREQUAL "CTestDashboardTargets")
+        set_target_properties(${_target} PROPERTIES FOLDER "Tests/CTest")
+    endif()
+endforeach()
+
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter)
     if(Python3_FOUND)
@@ -87,3 +111,5 @@ if(BUILD_TESTING)
         message(STATUS "Python3 not found -- tests disabled")
     endif()
 endif()
+
+unset(CMAKE_FOLDER)

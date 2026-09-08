@@ -12,6 +12,9 @@ target_link_libraries(hybrid-inverse-kinematics-solver PRIVATE
     RapidXML::RapidXML
 )
 
+# Solution Explorer grouping (see USE_FOLDERS at the top level).
+set_target_properties(hybrid-inverse-kinematics-solver PROPERTIES FOLDER "Executables")
+
 # <filesystem>. Extensions off so GCC gets -std=c++17 rather than -std=gnu++17.
 target_compile_features(hybrid-inverse-kinematics-solver PRIVATE cxx_std_17)
 set_target_properties(hybrid-inverse-kinematics-solver PROPERTIES CXX_EXTENSIONS OFF)
