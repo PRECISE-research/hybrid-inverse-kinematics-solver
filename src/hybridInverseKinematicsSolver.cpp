@@ -3,10 +3,12 @@
 #include <vector>
 #include <filesystem>
 #include <map>
+#include <set>
 #include <fstream>
 #include <sstream>
 #include <iterator>
 #include <chrono>
+#include <iomanip>
 #include <cstdlib>
 
 #include <OpenSim.h>
@@ -20,7 +22,7 @@ struct InverseKinematicsConfigurationFile {
 
 	std::string orientationsFilePath = "none";
 	OpenSim::Set<OpenSim::OrientationWeight> orientationsWeights;
-	std::vector<double> orientationRotations = { 0., 0., 0. };
+	std::vector<double> orientationRotations = { 0., 0., 0. };  // degrees
 
 	std::string coordinatesFilePath = "none";
 	std::map<std::string, double> coordinatesWeights;
@@ -32,9 +34,37 @@ struct InverseKinematicsConfigurationFile {
 	double constraintWeight = SimTK::Infinity;
 	double solverAccuracy = 1.e-5;
 
-	// TODO: allow crop to range in future
-	std::pair<double, double> timeRange;
 };
+
+// Warn about elements we do not recognise, so an obsolete tag (applyRotation) or a
+// typo is reported instead of being silently ignored.
+static void warnUnknownChildren(rapidxml::xml_node<>* parent, const std::string& blockName,
+	const std::set<std::string>& known) {
+	for (auto child = parent->first_node(); child != NULL; child = child->next_sibling()) {
+		if (known.find(child->name()) == known.end())
+			std::cout << "Warning: unrecognised element '" << child->name() << "' in "
+				<< blockName << " of cfg file, ignored" << std::endl;
+	}
+}
+
+// Read one "<xWeight name=\"foo\">1.0</xWeight>" entry. Returns false (and warns)
+// rather than dereferencing a missing attribute or leaving the value uninitialised.
+static bool readWeightNode(rapidxml::xml_node<>* node, const std::string& blockName,
+	std::string& nameOut, double& valueOut) {
+	auto attr = node->first_attribute("name");
+	if (attr == nullptr) {
+		std::cout << "Warning: a " << blockName << "->weights entry has no 'name' attribute, skipping" << std::endl;
+		return false;
+	}
+	nameOut = attr->value();
+	std::istringstream strm(node->value());
+	if (!(strm >> valueOut)) {
+		std::cout << "Warning: " << blockName << "->weights entry '" << nameOut
+			<< "' has a non-numeric value, skipping" << std::endl;
+		return false;
+	}
+	return true;
+}
 
 InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	std::filesystem::path filePath(path);
@@ -50,18 +80,33 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 		exit(EXIT_FAILURE);
 	}
 
-	// Read the XML file into a string
-	std::string xmlContent;
-	std::string line;
-	while (std::getline(file, line))
-		xmlContent += line;
+	// Read the XML file into a string. Read it whole rather than line by line:
+	// concatenating getline() output drops the newlines, which silently glues a tag
+	// split across lines onto the next one.
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	std::string xmlContent = buffer.str();
 
 	// Parse the XML content
 	rapidxml::xml_document<> doc;
-	doc.parse<0>(&xmlContent[0]);
+	try {
+		doc.parse<0>(&xmlContent[0]);
+	}
+	catch (const rapidxml::parse_error& e) {
+		std::cout << "Error: failed to parse cfg file '" << path << "': " << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	// Access the configuration values
 	rapidxml::xml_node<>* rootNode = doc.first_node();
+	if (rootNode == nullptr) {
+		std::cout << "Error: cfg file '" << path << "' contains no XML root element" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	warnUnknownChildren(rootNode, "the setup file", {
+		"modelFilePath", "markers", "orientations", "coordinates",
+		"resultsOutputPath", "useVisualizer", "constraintWeight", "solverAccuracy" });
 
 	if (rootNode->first_node("modelFilePath")) {
 		std::filesystem::path modelPath(rootNode->first_node("modelFilePath")->value());
@@ -78,6 +123,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	if (rootNode->first_node("markers")) {
 		// Try to get marker file path
 		auto markersNode = rootNode->first_node("markers");
+		warnUnknownChildren(markersNode, "markers", { "filePath", "weights" });
 		if (markersNode->first_node("filePath")) {
 			std::filesystem::path markersPath(markersNode->first_node("filePath")->value());
 			if (markersPath.is_relative())
@@ -95,12 +141,12 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 			auto weightsNode = markersNode->first_node("weights");
 			auto node = weightsNode->first_node();
 			while (node != NULL) {
-				std::string weightName = node->first_attribute("name")->value();
+				std::string weightName;
 				double weightValue;
-				std::istringstream myStrm(node->value());
-				myStrm >> weightValue;
-				OpenSim::MarkerWeight markerWeight(weightName, weightValue);
-				cfgDetails.markerWeights.cloneAndAppend(markerWeight);
+				if (readWeightNode(node, "markers", weightName, weightValue)) {
+					OpenSim::MarkerWeight markerWeight(weightName, weightValue);
+					cfgDetails.markerWeights.cloneAndAppend(markerWeight);
+				}
 
 				node = node->next_sibling();
 			}
@@ -116,6 +162,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	if (rootNode->first_node("orientations")) {
 		// Try to get orientations file path
 		auto orientationsNode = rootNode->first_node("orientations");
+		warnUnknownChildren(orientationsNode, "orientations", { "filePath", "weights", "rotation" });
 		if (orientationsNode->first_node("filePath")) {
 			std::filesystem::path orientationsPath(orientationsNode->first_node("filePath")->value());
 			if (orientationsPath.is_relative())
@@ -133,21 +180,21 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 			auto weightsNode = orientationsNode->first_node("weights");
 			auto node = weightsNode->first_node();
 			while (node != NULL) {
-				std::string weightName = node->first_attribute("name")->value();
+				std::string weightName;
 				double weightValue;
-				std::istringstream myStrm(node->value());
-				myStrm >> weightValue;
-				OpenSim::OrientationWeight markerWeight(weightName, weightValue);
-				cfgDetails.orientationsWeights.cloneAndAppend(markerWeight);
+				if (readWeightNode(node, "orientations", weightName, weightValue)) {
+					OpenSim::OrientationWeight markerWeight(weightName, weightValue);
+					cfgDetails.orientationsWeights.cloneAndAppend(markerWeight);
+				}
 
 				node = node->next_sibling();
 			}
 		}
 		else {
-			std::cout << "Warning: no markers->weights node available in cfg file, default weight of 1 will be used for all" << std::endl;
+			std::cout << "Warning: no orientations->weights node available in cfg file, default weight of 1 will be used for all" << std::endl;
 		}
 
-		// Try to get whether to apply rotation to orientations
+		// Try to get the sensor-to-OpenSim rotation (degrees, space-fixed XYZ)
 		if (orientationsNode->first_node("rotation")) {
 			std::istringstream iss(orientationsNode->first_node("rotation")->value());
 			auto rotation = std::vector<double>{ std::istream_iterator<double>(iss),
@@ -166,6 +213,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	if (rootNode->first_node("coordinates")) {
 		// Try to get coordinates file path
 		auto coordinatesNode = rootNode->first_node("coordinates");
+		warnUnknownChildren(coordinatesNode, "coordinates", { "filePath", "weights", "inDegrees" });
 		if (coordinatesNode->first_node("filePath")) {
 			std::filesystem::path coordinatesPath(coordinatesNode->first_node("filePath")->value());
 			if (coordinatesPath.is_relative())
@@ -183,11 +231,11 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 			auto weightsNode = coordinatesNode->first_node("weights");
 			auto node = weightsNode->first_node();
 			while (node != NULL) {
-				std::string weightName = node->first_attribute("name")->value();
+				std::string weightName;
 				double weightValue;
-				std::istringstream myStrm(node->value());
-				myStrm >> weightValue;
-				cfgDetails.coordinatesWeights.insert({ weightName, weightValue });
+				if (readWeightNode(node, "coordinates", weightName, weightValue)) {
+					cfgDetails.coordinatesWeights.insert({ weightName, weightValue });
+				}
 
 				node = node->next_sibling();
 			}
@@ -245,13 +293,18 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	return cfgDetails;
 }
 
+// `rotation` is a space-fixed XYZ sequence in DEGREES, matching OpenSim's own
+// OpenSense setup files. SimTK::Rotation takes radians, so it is converted here.
 OpenSim::TimeSeriesTable_<SimTK::Rotation> loadOrientationsData(std::string filePath, std::vector<double> rotation = { 0., 0., 0. }) {
 	//To use quaternion data, have to load the quaternion.sto and convert it into rotations//
 	//Load orienation data as a quat table 
 	OpenSim::TimeSeriesTableQuaternion quatTable(filePath);
 	//Have to rotate quaternions into opensim frame
 	//Create rotation sequence
-	const SimTK::Rotation sensorToOpensim = SimTK::Rotation(SimTK::BodyOrSpaceType::SpaceRotationSequence, rotation[0], SimTK::XAxis, rotation[1], SimTK::YAxis, rotation[2], SimTK::ZAxis);
+	const SimTK::Rotation sensorToOpensim = SimTK::Rotation(SimTK::BodyOrSpaceType::SpaceRotationSequence,
+		SimTK::convertDegreesToRadians(rotation[0]), SimTK::XAxis,
+		SimTK::convertDegreesToRadians(rotation[1]), SimTK::YAxis,
+		SimTK::convertDegreesToRadians(rotation[2]), SimTK::ZAxis);
 	// Rotate data so Yaxis is up (like OpenSim) 
 	OpenSim::OpenSenseUtilities::rotateOrientationTable(quatTable, sensorToOpensim);
 	//Have to convert Quaternion table to rotation data type
@@ -263,11 +316,15 @@ OpenSim::TimeSeriesTable_<SimTK::Rotation> loadOrientationsData(std::string file
 // Print the time difference to the terminal in minutes and seconds
 static void printComputationTime(std::chrono::high_resolution_clock::time_point startTime,
 	std::chrono::high_resolution_clock::time_point endTime) {
-	auto duration = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
-	if (duration.count() / 60 > 0)
-		std::cout << duration.count() / 60 << " minute" << (duration.count() / 60 > 1 ? "s" : "") << " ";
-	std::cout << duration.count() % 60 << " second" << (duration.count() % 60 > 1 ? "s" : "");
-	std::cout << std::endl;
+	// Millisecond resolution: at second resolution every short trial reported
+	// "0 second", which is both wrong-looking and useless for comparing runs.
+	const auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+	const auto minutes = totalMs / 60000;
+	const double seconds = (totalMs - minutes * 60000) / 1000.0;
+	if (minutes > 0)
+		std::cout << minutes << " minute" << (minutes == 1 ? "" : "s") << " ";
+	std::cout << std::fixed << std::setprecision(2) << seconds
+		<< " second" << (seconds == 1.0 ? "" : "s") << std::defaultfloat << std::endl;
 }
 
 void printHeader() {
@@ -352,7 +409,7 @@ int main(int argc, char** argv) {
 			timeSteps = mRefs.getMarkerTable().getIndependentColumn();
 		}
 		catch (const std::exception& e) {
-			std::cerr << "Error: failed to load marker data '" << ikCfg.markerWeights << "': " << e.what() << std::endl;
+			std::cerr << "Error: failed to load marker data '" << ikCfg.markersFilePath << "': " << e.what() << std::endl;
 			return EXIT_FAILURE;
 		}
 	}
@@ -390,6 +447,9 @@ int main(int argc, char** argv) {
 					orientationsDataNew.setColumnLabels(orientationNames);
 					for (auto time : timeSteps)
 						orientationsDataNew.appendRow(time, orientationsData.getNearestRow(time));
+					// Without this the resampled table was discarded and the solve ran
+					// against the original, misaligned orientations.
+					orientationsData = orientationsDataNew;
 				}
 			}
 		

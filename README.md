@@ -91,8 +91,7 @@ optional; supply whichever combination the trial calls for.
     <weights>
       <orientationWeight name="femur_r_imu">1</orientationWeight>
     </weights>
-    <rotation>0. 0. 0.</rotation>            <!-- space-fixed XYZ, RADIANS -->
-    <applyRotation>false</applyRotation>
+    <rotation>0. 0. 0.</rotation>            <!-- space-fixed XYZ, degrees -->
   </orientations>
 
   <coordinates>                              <!-- optional -->
@@ -110,9 +109,12 @@ optional; supply whichever combination the trial calls for.
 </inverseKinematicsSetup>
 ```
 
-Note that `<rotation>` is applied as a space-fixed XYZ sequence in **radians**,
-not degrees, unlike OpenSim's own OpenSense setup files. A value of `0 0 -90`
-is -90 radians, not a quarter turn.
+`<rotation>` is a space-fixed XYZ sequence in degrees, matching OpenSim's own
+OpenSense setup files.
+
+Any element the parser does not recognise is reported as a warning rather than
+ignored, so typos and obsolete tags (`<applyRotation>`, superseded by
+`<rotation>`) show up instead of quietly doing nothing.
 
 Names that do not exist in the model are reported as warnings and skipped, not
 treated as errors. Alongside `resultsOutputPath` the tool writes

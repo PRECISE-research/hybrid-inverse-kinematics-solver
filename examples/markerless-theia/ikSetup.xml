@@ -59,7 +59,6 @@
       <orientationWeight name="head">1</orientationWeight>
       <orientationWeight name="pelvis_shifted">1</orientationWeight>
     </weights>
-    <applyRotation>false</applyRotation>
   </orientations>
   <resultsOutputPath>./ik_results.sto</resultsOutputPath>
   <useVisualizer>false</useVisualizer>
