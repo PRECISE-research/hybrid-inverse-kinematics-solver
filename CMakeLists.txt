@@ -26,7 +26,7 @@ cmake_minimum_required(VERSION 3.21...3.31)
 # empty and the banner silently reads "0.2." instead of "0.2.0".
 project(hybrid-inverse-kinematics-solver
     VERSION 1.0.0
-    DESCRIPTION "Hybrid marker/orientation/coordinate inverse kinematics solver for OpenSim"
+    DESCRIPTION "Command-line OpenSim inverse kinematics solver that tracks markers, IMU orientations and prescribed coordinates in a single solve"
     LANGUAGES CXX
 )
 
