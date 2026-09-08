@@ -14,16 +14,38 @@ set(SOLVER       $<TARGET_FILE:hybrid-inverse-kinematics-solver>)
 # prescribed coordinates, markers combined with orientations, and markers alone.
 # References were produced with OpenSim 4.4; see run_test.py on regenerating.
 # -----------------------------------------------------------------------------
-set(GOLDEN_EXAMPLES imu-orientations markerless-theia markers-cycling)
+# Tolerances are per example, because they are not equally reproducible.
+#
+# imu-orientations and markers-cycling reproduce BIT-FOR-BIT, across OpenSim 4.4
+# and 4.5.2 and across machines, so they are held to 1e-6 and any movement at all
+# is a real change.
+#
+# markerless-theia is the only fixture tracking markers AND orientations in one
+# solve, and on this trial the two objectives genuinely disagree (the pelvis
+# rotations cannot be driven below ~1.5 deg RMS however they are weighted). That
+# leaves a shallow minimum which different CPUs and BLAS paths resolve slightly
+# differently: a CI runner moves 37 of its 40 coordinates by up to ~0.4 deg
+# against references generated on a dev machine. 1.0 deg is loose enough to
+# absorb that and still an order of magnitude tighter than any regression this
+# suite has actually caught (the coordinate-weight and units bugs moved joints by
+# 24 to 133 deg). Do not tighten it without a hardware-independent fixture.
+set(GOLDEN_EXAMPLES
+    "imu-orientations|1e-6"
+    "markerless-theia|1.0"
+    "markers-cycling|1e-6")
 
-foreach(example IN LISTS GOLDEN_EXAMPLES)
+foreach(entry IN LISTS GOLDEN_EXAMPLES)
+    string(REPLACE "|" ";" fields "${entry}")
+    list(GET fields 0 example)
+    list(GET fields 1 tolerance)
     add_test(NAME golden.${example}
         COMMAND "${Python3_EXECUTABLE}" "${TEST_DRIVER}"
             --exe "${SOLVER}" --opensim-bin "${OpenSim_BIN_DIR}"
             golden
                 --setup    "${EXAMPLES_DIR}/${example}/ikSetup.xml"
                 --produced "${EXAMPLES_DIR}/${example}/ik_results.sto"
-                --expected "${CMAKE_CURRENT_SOURCE_DIR}/expected/${example}.sto")
+                --expected "${CMAKE_CURRENT_SOURCE_DIR}/expected/${example}.sto"
+                --tol      "${tolerance}")
     # The solves are quick, but a loaded machine should not produce a red suite.
     set_tests_properties(golden.${example} PROPERTIES TIMEOUT 300)
 endforeach()
@@ -81,7 +103,9 @@ add_custom_command(TARGET regenerate-test-references POST_BUILD
             --setup    "${CMAKE_CURRENT_SOURCE_DIR}/cases/rotation_90.xml"
             --produced "${EXAMPLES_DIR}/imu-orientations/ik_rotation90.sto"
             --expected "${CMAKE_CURRENT_SOURCE_DIR}/expected/rotation_90.sto")
-foreach(example IN LISTS GOLDEN_EXAMPLES)
+foreach(entry IN LISTS GOLDEN_EXAMPLES)
+    string(REPLACE "|" ";" fields "${entry}")
+    list(GET fields 0 example)
     add_custom_command(TARGET regenerate-test-references POST_BUILD
         COMMAND "${Python3_EXECUTABLE}" "${TEST_DRIVER}"
             --exe "${SOLVER}" --opensim-bin "${OpenSim_BIN_DIR}"

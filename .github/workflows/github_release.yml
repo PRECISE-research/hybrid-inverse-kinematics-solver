@@ -1,0 +1,187 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'   # 1.2.3-rc1 etc, published as a prerelease
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-assets:
+    # Pinned to windows-2022: the OpenSim package below is built for this image.
+    runs-on: windows-2022
+
+    env:
+      OPENSIM_VERSION: 4.5.2
+      OPENSIM_URL: https://github.com/opensim-org/opensim-core/releases/download/4.5.2/opensim-core-4.5.2-2025-04-14-fb5fac1-win2022.zip
+      OPENSIM_ROOT: ${{ github.workspace }}/.deps/opensim
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The banner prints project(VERSION), so a tag that disagrees with it would
+      # ship a binary announcing the wrong version. Fail in seconds, before any
+      # download or build.
+      - name: Check tag matches project(VERSION)
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME -replace '-.*$', ''   # 1.2.3-rc1 -> 1.2.3
+          $m = Select-String -Path CMakeLists.txt -Pattern '^\s*VERSION\s+(\d+\.\d+\.\d+)\s*$' |
+            Select-Object -First 1
+          if (-not $m) { throw "Could not find 'VERSION x.y.z' in CMakeLists.txt - was project() reformatted?" }
+          $version = $m.Matches[0].Groups[1].Value
+          if ($tag -ne $version) {
+            throw ("Tag $env:GITHUB_REF_NAME but CMakeLists.txt says project(VERSION $version). " +
+              "Bump the VERSION in CMakeLists.txt (the tool's banner prints it) and re-tag, " +
+              "or delete the tag and push one that matches.")
+          }
+
+      # Passed to CMake explicitly below; the tests use the stdlib only.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Shared with continuous_integration.yml - same key, same prune list. If you
+      # change the prune list, change it in BOTH files and bump "-prune1" in both.
+      - name: Cache OpenSim
+        id: opensim-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.OPENSIM_ROOT }}
+          key: opensim-${{ env.OPENSIM_VERSION }}-win2022-prune1
+
+      - name: Download and prune OpenSim
+        if: steps.opensim-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'  # progress rendering slows big downloads
+          $zip = "$env:RUNNER_TEMP/opensim.zip"
+          Invoke-WebRequest $env:OPENSIM_URL -OutFile $zip
+          Write-Host "Downloaded $([math]::Round((Get-Item $zip).Length / 1MB)) MB"
+
+          # ExtractToDirectory, not Expand-Archive: far faster on an archive this
+          # size and it does not trip over long paths.
+          $staging = "$env:RUNNER_TEMP/opensim-extracted"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $staging)
+
+          # The win2022 asset is a zip wrapping a single inner zip, so unwrap again
+          # when that is all that came out.
+          $inner = @(Get-ChildItem $staging -File -Filter *.zip)
+          if ($inner.Count -eq 1) {
+            Write-Host "Unwrapping inner archive: $($inner[0].Name)"
+            $staging = "$env:RUNNER_TEMP/opensim-inner"
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($inner[0].FullName, $staging)
+          }
+
+          # Find the SDK root by locating its CMake config at whatever depth the
+          # archive nests it, rather than assuming a layout.
+          $config = Get-ChildItem $staging -Recurse -Filter OpenSimConfig.cmake -File |
+            Select-Object -First 1
+          if (-not $config) {
+            Write-Host "Directories in the extracted tree:"
+            Get-ChildItem $staging -Recurse -Depth 2 -Directory |
+              ForEach-Object { Write-Host "  $($_.FullName)" }
+            throw "OpenSimConfig.cmake not found in the archive - layout changed?"
+          }
+          # <root>/cmake/OpenSimConfig.cmake -> <root>
+          $root = Split-Path (Split-Path $config.FullName -Parent) -Parent
+          Write-Host "OpenSim root: $root"
+
+          foreach ($item in @(
+              'Resources', 'sdk/Python', 'sdk/Java', 'sdk/doc',
+              'sdk/lib/osimJavaJNI.lib', 'bin/osimJavaJNI.dll', 'bin/glut32.dll',
+              'bin/ipopt-3.dll', 'bin/sipopt-3.dll', 'bin/ipoptamplinterface-3.dll',
+              'bin/coinmumps-3.dll', 'bin/svml_dispmd.dll', 'bin/libmmd.dll',
+              'bin/libifcoremd.dll', 'bin/libiomp5md.dll')) {
+            Remove-Item -Recurse -Force "$root/$item" -ErrorAction Ignore
+          }
+          Remove-Item -Force "$root/bin/casadi*.dll", "$root/bin/*.exe" -ErrorAction Ignore
+          New-Item -ItemType Directory -Force (Split-Path $env:OPENSIM_ROOT) | Out-Null
+          Move-Item $root $env:OPENSIM_ROOT
+          $mb = [math]::Round((Get-ChildItem $env:OPENSIM_ROOT -Recurse -File |
+            Measure-Object Length -Sum).Sum / 1MB)
+          Write-Host "Pruned OpenSim tree: $mb MB (cached for future runs)"
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          $python = (Get-Command python).Source.Replace('\', '/')
+          $opensim = "$env:OPENSIM_ROOT".Replace('\', '/')
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            "-DOpenSim_DIR=$opensim/cmake" `
+            "-DPython3_EXECUTABLE=$python"
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel ([Environment]::ProcessorCount)
+
+      # Never ship an untested binary, even though the same commit likely went
+      # green in CI - tags can be pushed to anything.
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build -C Release --output-on-failure --no-tests=error
+
+      # install() bundles the exe plus every DLL it imports (OpenSim, SimTK, BLAS,
+      # MSVC runtime) into release/bin via RUNTIME_DEPENDENCIES, and hard-fails if
+      # anything is missing from the pruned OpenSim tree.
+      - name: Install
+        shell: pwsh
+        run: cmake --install build --config Release --prefix release
+
+      # The zip must run in place, so everything is staged into release/bin, which
+      # becomes the zip root: exe, DLLs, README, and licenses/ for what is being
+      # redistributed. OpenSim's license text is fetched at the exact version built
+      # against; Invoke-WebRequest throws on a 404, which is the point - a silent
+      # placeholder is worse than a failed run.
+      - name: Add README and licenses
+        shell: pwsh
+        run: |
+          Copy-Item README.md release/bin/
+          New-Item -ItemType Directory -Force release/bin/licenses | Out-Null
+          Invoke-WebRequest "https://raw.githubusercontent.com/opensim-org/opensim-core/$env:OPENSIM_VERSION/LICENSE.txt" `
+            -OutFile release/bin/licenses/OpenSim-LICENSE.txt
+          Copy-Item external/rapidxml/license.txt release/bin/licenses/RapidXML-license.txt
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path release/bin/* `
+            -DestinationPath "dist/hybrid-inverse-kinematics-solver-$env:GITHUB_REF_NAME-windows-x64.zip"
+
+      - name: Upload packaged assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: dist/*
+
+  release:
+    needs: build-assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: dist
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          # A suffixed tag (1.2.3-rc1) is published as a prerelease.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            dist/*

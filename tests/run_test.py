@@ -51,15 +51,28 @@ def compare(produced, expected, tol):
         problems.append("row count differs: produced %d, expected %d" % (len(pr), len(er)))
         return problems
 
-    worst, where, at_row = 0.0, "", -1
+    # Track the worst difference per column, not just overall: when a solve is
+    # ill-conditioned it is usually a handful of related coordinates that move,
+    # and knowing which ones is the difference between a real regression and a
+    # known-unstable joint.
+    per_column = [0.0] * len(pc)
+    worst_row = [-1] * len(pc)
     for r, (a, b) in enumerate(zip(pr, er)):
         for j, (x, y) in enumerate(zip(a, b)):
             d = abs(x - y)
-            if d > worst:
-                worst, where, at_row = d, pc[j], r
+            if d > per_column[j]:
+                per_column[j], worst_row[j] = d, r
+
+    ranked = sorted(zip(per_column, pc, worst_row), reverse=True)
+    worst, where, at_row = ranked[0]
     if worst > tol:
         problems.append("max |difference| = %.6e in column '%s' at row %d (tolerance %.1e)"
                         % (worst, where, at_row, tol))
+        over = [t for t in ranked if t[0] > tol]
+        problems.append("%d of %d columns exceed the tolerance; worst offenders:"
+                        % (len(over), len(pc)))
+        for d, name, row in over[:8]:
+            problems.append("    %-28s %.6e (row %d)" % (name, d, row))
     return problems
 
 
