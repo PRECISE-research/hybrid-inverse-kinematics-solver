@@ -91,7 +91,7 @@ optional; supply whichever combination the trial calls for.
     <weights>
       <orientationWeight name="femur_r_imu">1</orientationWeight>
     </weights>
-    <rotation>0. 0. 0.</rotation>            <!-- space-fixed XYZ, degrees -->
+    <rotation>0. 0. 0.</rotation>            <!-- space-fixed XYZ, RADIANS -->
     <applyRotation>false</applyRotation>
   </orientations>
 
@@ -109,6 +109,10 @@ optional; supply whichever combination the trial calls for.
   <solverAccuracy>1e-05</solverAccuracy>
 </inverseKinematicsSetup>
 ```
+
+Note that `<rotation>` is applied as a space-fixed XYZ sequence in **radians**,
+not degrees, unlike OpenSim's own OpenSense setup files. A value of `0 0 -90`
+is -90 radians, not a quarter turn.
 
 Names that do not exist in the model are reported as warnings and skipped, not
 treated as errors. Alongside `resultsOutputPath` the tool writes
