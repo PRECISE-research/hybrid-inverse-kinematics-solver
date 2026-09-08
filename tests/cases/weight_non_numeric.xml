@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A non-numeric weight. The extraction used to fail silently and leave the
+     double uninitialised, feeding garbage to the solver. -->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./does_not_exist.osim</modelFilePath>
+  <markers>
+    <filePath>./does_not_exist.trc</filePath>
+    <weights>
+      <markerWeight name="RASI">not_a_number</markerWeight>
+    </weights>
+  </markers>
+</inverseKinematicsSetup>

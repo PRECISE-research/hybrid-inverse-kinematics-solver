@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A model but no markers, orientations or coordinates: nothing to solve for. -->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./does_not_exist.osim</modelFilePath>
+  <resultsOutputPath>./ik_results.sto</resultsOutputPath>
+</inverseKinematicsSetup>

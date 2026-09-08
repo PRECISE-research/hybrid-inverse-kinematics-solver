@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unclosed <modelFilePath>: rapidxml throws parse_error, which used to escape
+     main() and terminate without naming the file. -->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./model.osim
+</inverseKinematicsSetup>

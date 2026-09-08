@@ -101,6 +101,22 @@ set_property(TARGET hybrid-inverse-kinematics-solver PROPERTY
     VS_DEBUGGER_ENVIRONMENT "PATH=${OpenSim_BIN_DIR};%PATH%")
 
 # -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
+
+# Defines BUILD_TESTING (ON by default). Configure with -DBUILD_TESTING=OFF to
+# skip, e.g. on a machine without Python.
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Python3 COMPONENTS Interpreter)
+    if(Python3_FOUND)
+        add_subdirectory(tests)
+    else()
+        message(STATUS "Python3 not found -- tests disabled")
+    endif()
+endif()
+
+# -----------------------------------------------------------------------------
 # Install
 # -----------------------------------------------------------------------------
 

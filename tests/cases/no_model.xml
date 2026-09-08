@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- modelFilePath is mandatory. -->
+<inverseKinematicsSetup version="1.0">
+  <resultsOutputPath>./ik_results.sto</resultsOutputPath>
+</inverseKinematicsSetup>

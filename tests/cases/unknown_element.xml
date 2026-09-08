@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- applyRotation is vestigial, superseded by <rotation>, and was silently
+     ignored for a long time. Unrecognised elements must now be reported. -->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./does_not_exist.osim</modelFilePath>
+  <orientations>
+    <filePath>./does_not_exist.sto</filePath>
+    <applyRotation>false</applyRotation>
+  </orientations>
+</inverseKinematicsSetup>

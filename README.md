@@ -120,6 +120,42 @@ Names that do not exist in the model are reported as warnings and skipped, not
 treated as errors. Alongside `resultsOutputPath` the tool writes
 `marker_errors.sto` and `orientation_errors.sto` into the same directory.
 
+## Tests
+
+```bash
+ctest --test-dir build/windows-msvc -C Release
+```
+
+Twelve tests, about 8 seconds. They put the OpenSim the binary was built against
+first on `PATH` themselves, so they are immune to the multi-install problem above.
+
+**Error paths** (8, sub-second each) drive the setup-file parser with malformed
+input: unparseable XML, no root element, a missing `modelFilePath`, nothing to
+track, a weight with no `name`, a non-numeric weight, an unrecognised element,
+and a setup file that does not exist. Each asserts the exit code and the
+message. Every one of these was a crash, an uninitialised read, or silence
+before the guards existed.
+
+**Golden-file regression** (4) solves each example and compares the resulting
+`.sto` against a committed reference, column by column, to a tolerance of 1e-6.
+The three examples cover the three tracking paths; `tests/cases/rotation_90.xml`
+adds a fourth because every shipped example uses `<rotation>0. 0. 0.</rotation>`,
+which makes the degrees-to-radians conversion a no-op and would leave that path
+untested.
+
+The references were produced with **OpenSim 4.4** and are sensitive to it. After
+an upgrade, small differences are expected and absorbed by the tolerance; larger
+ones deserve investigation. Once you have read the diff and understand it:
+
+```bash
+cmake --build build/windows-msvc --config Release --target regenerate-test-references
+```
+
+Do not reach for that to turn a red test green without reading what it was
+reporting first — the failure message names the column and row that moved.
+
+Configure with `-DBUILD_TESTING=OFF` to skip the tests, e.g. without Python.
+
 ## Examples
 
 Run any of them with `-S`; each writes `ik_results.sto` beside its setup file.
