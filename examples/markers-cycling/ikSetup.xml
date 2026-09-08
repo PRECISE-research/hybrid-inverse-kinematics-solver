@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Optical marker cycling trial, trimmed to one pedal revolution (800 frames at
+  200 Hz = 4 s at 15 rpm).
+
+  Markers only, but with a wide spread of weights: pelvis landmarks at 1000 hold
+  the model down, joint-centre estimates sit at 1, and the medial malleoli are
+  zeroed out entirely. Useful for seeing how weighting drives the solution.
+-->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./model.osim</modelFilePath>
+  <markers>
+    <filePath>./markers.trc</filePath>
+    <weights>
+      <markerWeight name="C7">100</markerWeight>
+      <markerWeight name="JN">1</markerWeight>
+      <markerWeight name="T10">100</markerWeight>
+      <markerWeight name="RBAK">1</markerWeight>
+      <markerWeight name="RSHO">100</markerWeight>
+      <markerWeight name="LSHO">100</markerWeight>
+      <markerWeight name="RHUM1">100</markerWeight>
+      <markerWeight name="LHUM1">100</markerWeight>
+      <markerWeight name="RHUM2">100</markerWeight>
+      <markerWeight name="LHUM2">100</markerWeight>
+      <markerWeight name="RHUM3">100</markerWeight>
+      <markerWeight name="l_uarm">100</markerWeight>
+      <markerWeight name="LHUM3">100</markerWeight>
+      <markerWeight name="RLEP">500</markerWeight>
+      <markerWeight name="RMEP">500</markerWeight>
+      <markerWeight name="LMEP">500</markerWeight>
+      <markerWeight name="RRAD">500</markerWeight>
+      <markerWeight name="LRAD">500</markerWeight>
+      <markerWeight name="RUL">500</markerWeight>
+      <markerWeight name="LUL">500</markerWeight>
+      <markerWeight name="RIndex">10</markerWeight>
+      <markerWeight name="LIndex">10</markerWeight>
+      <markerWeight name="RFinger">10</markerWeight>
+      <markerWeight name="LFinger">10</markerWeight>
+      <markerWeight name="RPinkie">10</markerWeight>
+      <markerWeight name="LPinkie">10</markerWeight>
+      <markerWeight name="RASI">1000</markerWeight>
+      <markerWeight name="LASI">1000</markerWeight>
+      <markerWeight name="RPSI">1000</markerWeight>
+      <markerWeight name="LPSI">1000</markerWeight>
+      <markerWeight name="RIC">1000</markerWeight>
+      <markerWeight name="LIC">1000</markerWeight>
+      <markerWeight name="LHJC">1</markerWeight>
+      <markerWeight name="RHJC">1</markerWeight>
+      <markerWeight name="RTHI1">100</markerWeight>
+      <markerWeight name="LTHI1">100</markerWeight>
+      <markerWeight name="RTHI2">100</markerWeight>
+      <markerWeight name="LTHI2">100</markerWeight>
+      <markerWeight name="RTHI3">100</markerWeight>
+      <markerWeight name="LTHI3">100</markerWeight>
+      <markerWeight name="RTHI4">100</markerWeight>
+      <markerWeight name="LTHI4">100</markerWeight>
+      <markerWeight name="RLFC">250</markerWeight>
+      <markerWeight name="LLFC">250</markerWeight>
+      <markerWeight name="RMFC">250</markerWeight>
+      <markerWeight name="LMFC">250</markerWeight>
+      <markerWeight name="RKJC">1</markerWeight>
+      <markerWeight name="LKJC">1</markerWeight>
+      <markerWeight name="RTIB1">100</markerWeight>
+      <markerWeight name="LTIB1">100</markerWeight>
+      <markerWeight name="RTIB2">100</markerWeight>
+      <markerWeight name="LTIB2">100</markerWeight>
+      <markerWeight name="RTIB3">100</markerWeight>
+      <markerWeight name="LTIB3">100</markerWeight>
+      <markerWeight name="RTIB4">100</markerWeight>
+      <markerWeight name="LTIB4">100</markerWeight>
+      <markerWeight name="RLMAL">1000</markerWeight>
+      <markerWeight name="LLMAL">1000</markerWeight>
+      <markerWeight name="RMMAL">0</markerWeight>
+      <markerWeight name="LMMAL">0</markerWeight>
+      <markerWeight name="RAJC">1</markerWeight>
+      <markerWeight name="LAJC">1</markerWeight>
+      <markerWeight name="RHIM">10</markerWeight>
+      <markerWeight name="LHIM">10</markerWeight>
+      <markerWeight name="RHVM">10</markerWeight>
+      <markerWeight name="LHVM">10</markerWeight>
+      <markerWeight name="RCAL">10</markerWeight>
+      <markerWeight name="LCAL">10</markerWeight>
+      <markerWeight name="RTOE">100</markerWeight>
+      <markerWeight name="LTOE">100</markerWeight>
+      <markerWeight name="LPedF">500</markerWeight>
+      <markerWeight name="LPedB">500</markerWeight>
+      <markerWeight name="RPedF">500</markerWeight>
+      <markerWeight name="RPedB">500</markerWeight>
+    </weights>
+  </markers>
+  <resultsOutputPath>./ik_results.sto</resultsOutputPath>
+  <useVisualizer>false</useVisualizer>
+  <constraintWeight>10</constraintWeight>
+  <solverAccuracy>1e-05</solverAccuracy>
+</inverseKinematicsSetup>

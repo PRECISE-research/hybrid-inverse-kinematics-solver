@@ -1,0 +1,11 @@
+# Default: let git normalise line endings for text it manages.
+* text=auto
+
+# Fixture data is byte-sensitive. These files are kept byte-identical to the
+# trial data they were derived from (apart from the deliberately scrubbed
+# header fields), and OpenSim's TRC/STO/MOT readers consume them verbatim.
+# Never let git rewrite them on checkout or commit.
+*.trc  -text
+*.sto  -text
+*.mot  -text
+*.osim -text

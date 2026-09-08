@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Markerless (Theia) key points, one gait cycle.
+
+  The hybrid case: Theia segment key points are tracked as markers while the
+  segment rotations from the same trial are tracked as orientations, in a single
+  solve. Several arm markers and orientations are not present in this model and
+  are reported as warnings; they are simply skipped.
+-->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./model.osim</modelFilePath>
+  <markers>
+    <filePath>./markers.trc</filePath>
+    <weights>
+      <markerWeight name="worldbody">1</markerWeight>
+      <markerWeight name="pelvis">1</markerWeight>
+      <markerWeight name="l_thigh">1</markerWeight>
+      <markerWeight name="l_shank">1</markerWeight>
+      <markerWeight name="l_foot">1</markerWeight>
+      <markerWeight name="l_toes">1</markerWeight>
+      <markerWeight name="r_thigh">1</markerWeight>
+      <markerWeight name="r_shank">1</markerWeight>
+      <markerWeight name="r_foot">1</markerWeight>
+      <markerWeight name="r_toes">1</markerWeight>
+      <markerWeight name="l_clavicle">1</markerWeight>
+      <markerWeight name="l_uarm">1</markerWeight>
+      <markerWeight name="l_larm">1</markerWeight>
+      <markerWeight name="l_hand">1</markerWeight>
+      <markerWeight name="r_clavicle">1</markerWeight>
+      <markerWeight name="r_uarm">1</markerWeight>
+      <markerWeight name="r_larm">1</markerWeight>
+      <markerWeight name="r_hand">1</markerWeight>
+      <markerWeight name="head">1</markerWeight>
+      <markerWeight name="pelvis_shifted">1</markerWeight>
+    </weights>
+  </markers>
+  <orientations>
+    <filePath>./orientations.sto</filePath>
+    <weights>
+      <orientationWeight name="worldbody">1</orientationWeight>
+      <orientationWeight name="pelvis_imu">1</orientationWeight>
+      <orientationWeight name="thigh_l_imu">1</orientationWeight>
+      <orientationWeight name="shank_l_imu">1</orientationWeight>
+      <orientationWeight name="foot_l_imu">1</orientationWeight>
+      <orientationWeight name="toes_l_imu">1</orientationWeight>
+      <orientationWeight name="thigh_r_imu">1</orientationWeight>
+      <orientationWeight name="shank_r_imu">1</orientationWeight>
+      <orientationWeight name="foot_r_imu">1</orientationWeight>
+      <orientationWeight name="toes_r_imu">1</orientationWeight>
+      <orientationWeight name="torso_imu">1</orientationWeight>
+      <orientationWeight name="clavicle_l_imu">1</orientationWeight>
+      <orientationWeight name="uarm_l_imu">1</orientationWeight>
+      <orientationWeight name="larm_l_imu">1</orientationWeight>
+      <orientationWeight name="hand_l_imu">1</orientationWeight>
+      <orientationWeight name="clavicle_r_imu">1</orientationWeight>
+      <orientationWeight name="uarm_r_imu">1</orientationWeight>
+      <orientationWeight name="larm_r_imu">1</orientationWeight>
+      <orientationWeight name="hand_r_imu">1</orientationWeight>
+      <orientationWeight name="head">1</orientationWeight>
+      <orientationWeight name="pelvis_shifted">1</orientationWeight>
+    </weights>
+    <applyRotation>false</applyRotation>
+  </orientations>
+  <resultsOutputPath>./ik_results.sto</resultsOutputPath>
+  <useVisualizer>false</useVisualizer>
+  <constraintWeight>10</constraintWeight>
+  <solverAccuracy>1e-05</solverAccuracy>
+</inverseKinematicsSetup>

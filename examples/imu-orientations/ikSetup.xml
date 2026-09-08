@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  IMU orientations + prescribed pelvis coordinates.
+
+  Exercises the hybrid mode this tool exists for: four IMU orientations drive the
+  legs while all six pelvis coordinates are prescribed from an external .mot,
+  something the stock OpenSim IK tool cannot do in one pass.
+-->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./model.osim</modelFilePath>
+  <orientations>
+    <filePath>./orientations.sto</filePath>
+    <weights>
+      <orientationWeight name="femur_r_imu">1</orientationWeight>
+      <orientationWeight name="tibia_r_imu">1</orientationWeight>
+      <orientationWeight name="femur_l_imu">1</orientationWeight>
+      <orientationWeight name="tibia_l_imu">1</orientationWeight>
+    </weights>
+    <rotation>0. 0. 0.</rotation>
+  </orientations>
+  <coordinates>
+    <filePath>./coordinates.mot</filePath>
+    <weights>
+      <orientationWeight name="pelvis_tilt">1</orientationWeight>
+      <orientationWeight name="pelvis_list">1</orientationWeight>
+      <orientationWeight name="pelvis_rotation">1</orientationWeight>
+      <orientationWeight name="pelvis_tx">1</orientationWeight>
+      <orientationWeight name="pelvis_ty">1</orientationWeight>
+      <orientationWeight name="pelvis_tz">1</orientationWeight>
+    </weights>
+    <inDegrees>true</inDegrees>
+  </coordinates>
+  <resultsOutputPath>./ik_results.sto</resultsOutputPath>
+  <useVisualizer>false</useVisualizer>
+  <constraintWeight>10</constraintWeight>
+  <solverAccuracy>1e-05</solverAccuracy>
+</inverseKinematicsSetup>
