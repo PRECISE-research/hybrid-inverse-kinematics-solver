@@ -25,7 +25,7 @@ cmake_minimum_required(VERSION 3.21...3.31)
 # all three components -- a two-component VERSION leaves PROJECT_VERSION_PATCH
 # empty and the banner silently reads "0.2." instead of "0.2.0".
 project(hybrid-inverse-kinematics-solver
-    VERSION 0.2.0
+    VERSION 1.0.0
     DESCRIPTION "Hybrid marker/orientation/coordinate inverse kinematics solver for OpenSim"
     LANGUAGES CXX
 )
