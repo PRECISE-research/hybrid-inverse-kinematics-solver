@@ -14,17 +14,18 @@ from body kinematics, say) and the rest has to be solved from IMUs.
 | Dependency | Version tested | Notes |
 |---|---|---|
 | OpenSim | 4.4 | `C:/OpenSim 4.4` |
-| RapidXML | 1.13 | header-only; `C:/dev/rapidxml-1.13` |
+| RapidXML | 1.13 | vendored in `external/rapidxml/`; nothing to install |
 | CMake | 3.21+ | 3.31.8 used here; 3.21 is the hard floor |
 | Compiler | MSVC 19.44 (VS 2022) | C++17 |
 
 ## Build
 
-Neither dependency can be found automatically, so both are passed explicitly.
-Adjust the two paths to match your machine:
+OpenSim cannot be found automatically, so its path is passed explicitly
+(RapidXML is vendored in the repository and found on its own). Adjust the
+path to match your machine:
 
 ```bash
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DOpenSim_DIR="C:/OpenSim 4.4/cmake" -DRapidXML_ROOT="C:/dev/rapidxml-1.13" -DCMAKE_INSTALL_PREFIX="./install"
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DOpenSim_DIR="C:/OpenSim 4.4/cmake" -DCMAKE_INSTALL_PREFIX="./install"
 ```
 
 ```bash

@@ -4,12 +4,16 @@
 # RapidXML is header-only, so this just locates the include directory and wraps
 # it in an INTERFACE IMPORTED target.
 #
-# Point it at a non-standard location with either -DRapidXML_ROOT=<dir> (honoured
-# automatically by find_path under CMP0074) or the legacy -DRapidXML_ROOT_DIR=<dir>.
+# The copy vendored under external/rapidxml is found by default. Point at a
+# different one with -DRapidXML_ROOT=<dir> (honoured automatically by find_path
+# under CMP0074) or the legacy -DRapidXML_ROOT_DIR=<dir> - explicit flags are
+# listed first in HINTS, so they win over the vendored copy.
 #
 # Sets:  RapidXML_FOUND, RapidXML_INCLUDE_DIR, RapidXML_VERSION
 # Target: RapidXML::RapidXML
 #
+
+set(_rapidxml_repo_external_rapidxml_dir "${CMAKE_CURRENT_LIST_DIR}/../external/rapidxml")
 
 # Search for the include path
 find_path(
@@ -19,7 +23,10 @@ find_path(
     rapidxml_utils.hpp
     rapidxml_iterators.hpp
     rapidxml_print.hpp
-  HINTS "${RapidXML_ROOT_DIR}" "${RapidXML_ROOT}"
+  HINTS
+    "${RapidXML_ROOT_DIR}"
+    "${RapidXML_ROOT}"
+    "${_rapidxml_repo_external_rapidxml_dir}"
   PATH_SUFFIXES include rapidxml
 )
 

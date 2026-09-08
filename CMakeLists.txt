@@ -5,10 +5,10 @@
 # any combination of marker, orientation and coordinate data described by an XML
 # setup file.
 #
-# Neither dependency is discoverable without help:
-#   * OpenSim 4.4   -- -DOpenSim_DIR=<opensim-root>/cmake
-#   * RapidXML 1.13 -- -DRapidXML_ROOT=<directory containing rapidxml.hpp>
-# The README carries the values these take on this lab's machines.
+# OpenSim is not discoverable without help: -DOpenSim_DIR=<opensim-root>/cmake
+# (the README carries the path this lab's machines use). RapidXML 1.13 is
+# vendored under external/rapidxml and found automatically; -DRapidXML_ROOT
+# overrides it.
 #
 # This file does project-wide setup only. The executable and its install rules
 # live in src/CMakeLists.txt; the test suite lives in tests/CMakeLists.txt.
