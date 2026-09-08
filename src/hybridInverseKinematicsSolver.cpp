@@ -568,7 +568,6 @@ int main(int argc, char** argv) {
 			}
 			if (t == 0)
 				orientationsErrorsTable.setColumnLabels(orientationsInUse);
-			std::cout << orientationErrors << std::endl;
 			orientationsErrorsTable.appendRow(timeSteps[t], orientationErrors);
 		}
 
