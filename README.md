@@ -20,25 +20,24 @@ from body kinematics, say) and the rest has to be solved from IMUs.
 
 ## Build
 
-`CMakePresets.json` already holds the paths above:
+Neither dependency can be found automatically, so both are passed explicitly.
+Adjust the two paths to match your machine:
 
 ```bash
-cmake --preset windows-msvc
-cmake --build --preset windows-msvc-release
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DOpenSim_DIR="C:/OpenSim 4.4/cmake" -DRapidXML_ROOT="C:/dev/rapidxml-1.13" -DCMAKE_INSTALL_PREFIX="./install"
 ```
 
-If OpenSim or RapidXML live elsewhere, override them without editing the
-presets:
-
 ```bash
-cmake --preset windows-msvc -DOpenSim_DIR="D:/OpenSim 4.4/cmake" -DRapidXML_ROOT=D:/src/rapidxml-1.13
+cmake --build build --config Release
 ```
 
-Install a self-contained copy (the OpenSim and SimTK DLLs are bundled next to
-the executable, so the install tree runs on a machine with no OpenSim):
+`CMAKE_INSTALL_PREFIX` is set because the default on Windows is
+`C:/Program Files (x86)/...`, which needs administrator rights. Installing
+gives a self-contained copy, with the OpenSim and SimTK DLLs bundled next to
+the executable, so the install tree runs on a machine with no OpenSim:
 
 ```bash
-cmake --install build/windows-msvc --config Release
+cmake --install build --config Release
 ```
 
 ### If the built exe exits immediately after printing its banner
@@ -50,7 +49,7 @@ Either run the **installed** copy from `install/bin` (which carries its own
 DLLs and is immune), or put the matching `bin` first:
 
 ```bash
-PATH="/c/OpenSim 4.4/bin:$PATH" ./build/windows-msvc/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
+PATH="/c/OpenSim 4.4/bin:$PATH" ./build/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
 ```
 
 ## Usage
@@ -123,7 +122,7 @@ treated as errors. Alongside `resultsOutputPath` the tool writes
 ## Tests
 
 ```bash
-ctest --test-dir build/windows-msvc -C Release
+ctest --test-dir build -C Release
 ```
 
 Twelve tests, about 8 seconds. They put the OpenSim the binary was built against
@@ -148,7 +147,7 @@ an upgrade, small differences are expected and absorbed by the tolerance; larger
 ones deserve investigation. Once you have read the diff and understand it:
 
 ```bash
-cmake --build build/windows-msvc --config Release --target regenerate-test-references
+cmake --build build --config Release --target regenerate-test-references
 ```
 
 Do not reach for that to turn a red test green without reading what it was
@@ -167,7 +166,7 @@ Run any of them with `-S`; each writes `ik_results.sto` beside its setup file.
 | `examples/markers-cycling` | 74 optical markers, one pedal revolution | markers only, with weights spanning 0 to 1000 |
 
 ```bash
-./build/windows-msvc/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
+./build/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
 ```
 
 The example data is deidentified, and trimmed to what each solve actually needs.

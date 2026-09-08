@@ -8,7 +8,7 @@
 # Neither dependency is discoverable without help:
 #   * OpenSim 4.4   -- -DOpenSim_DIR=<opensim-root>/cmake
 #   * RapidXML 1.13 -- -DRapidXML_ROOT=<directory containing rapidxml.hpp>
-# CMakePresets.json holds the known-good values for this lab's machines.
+# The README carries the values these take on this lab's machines.
 #
 # This file does project-wide setup only. The executable and its install rules
 # live in src/CMakeLists.txt; the test suite lives in tests/CMakeLists.txt.
