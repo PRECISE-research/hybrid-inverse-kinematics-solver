@@ -22,14 +22,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Pinned rather than left to whatever is on PATH: CMake's find_package(Python3)
       # and the PATH python are two independent choices, and when they disagree the
       # tests are silently configured out. The interpreter is passed to CMake
       # explicitly below. The tests use the stdlib only, so there is no pip step.
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -39,7 +39,7 @@ jobs:
       # github_release.yml (they share this cache).
       - name: Cache OpenSim
         id: opensim-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.OPENSIM_ROOT }}
           key: opensim-${{ env.OPENSIM_VERSION }}-win2022-prune1

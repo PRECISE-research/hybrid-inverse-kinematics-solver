@@ -11,7 +11,32 @@ both at once, and lets you additionally prescribe coordinates from a `.mot`
 file — useful when part of the kinematic chain is measured directly (a pelvis
 from body kinematics, say) and the rest has to be solved from IMUs.
 
-## Requirements
+## Quick start
+
+You do not need to build this, and you do not need OpenSim installed.
+
+1. Download `hybrid-inverse-kinematics-solver-X.Y.Z-windows-x64.zip` from the
+   [latest release](https://github.com/PRECISE-research/hybrid-inverse-kinematics-solver/releases/latest).
+2. Unzip it anywhere.
+3. Point it at a setup file:
+
+```bash
+hybrid-inverse-kinematics-solver.exe -S path	o\ikSetup.xml
+```
+
+The zip carries the OpenSim and SimTK libraries next to the executable, so it
+runs on a machine with no OpenSim installed and is unaffected by what is on
+`PATH`. Results are written beside the setup file.
+
+`examples/` in this repository holds three ready-to-run setups with their data —
+see [Examples](#examples). Writing your own is covered under
+[Setup file](#setup-file).
+
+Build from source only if you are changing the tool.
+
+## Building from source
+
+### Requirements
 
 | Dependency | Version tested | Notes |
 |---|---|---|
@@ -20,7 +45,7 @@ from body kinematics, say) and the rest has to be solved from IMUs.
 | CMake | 3.21+ | 3.31.8 used here; 3.21 is the hard floor |
 | Compiler | MSVC 19.44 (VS 2022) | C++17 |
 
-## Build
+### Build
 
 OpenSim cannot be found automatically, so its path is passed explicitly
 (RapidXML is vendored in the repository and found on its own). Adjust the
@@ -43,7 +68,7 @@ the executable, so the install tree runs on a machine with no OpenSim:
 cmake --install build --config Release
 ```
 
-### If the built exe exits immediately after printing its banner
+#### If the built exe exits immediately after printing its banner
 
 It found the wrong OpenSim DLLs. Windows resolves them by `PATH` order, so a
 machine with more than one OpenSim installed will happily load 4.5's DLLs into
@@ -178,6 +203,28 @@ the full test suite, and attaches
 `hybrid-inverse-kinematics-solver-X.Y.Z-windows-x64.zip` to a GitHub release.
 The zip is self-contained -- unzip anywhere and run the exe, no OpenSim
 installation needed. A tag like `X.Y.Z-rc1` publishes as a prerelease.
+
+## Related work
+
+This tool is a thin layer over OpenSim's `InverseKinematicsSolver`; the
+modelling and the solver itself are OpenSim's work. If you publish results
+produced with it, cite OpenSim as well as this repository:
+
+- Delp SL, Anderson FC, Arnold AS, et al. (2007). OpenSim: open-source software
+  to create and analyze dynamic simulations of movement. *IEEE Transactions on
+  Biomedical Engineering*, 54(11), 1940-1950.
+  [doi:10.1109/TBME.2007.901024](https://doi.org/10.1109/TBME.2007.901024)
+- Seth A, Hicks JL, Uchida TK, et al. (2018). OpenSim: Simulating musculoskeletal
+  dynamics and neuromuscular control to study human and animal movement. *PLOS
+  Computational Biology*, 14(7), e1006223.
+  [doi:10.1371/journal.pcbi.1006223](https://doi.org/10.1371/journal.pcbi.1006223)
+- Al Borno M, O'Day J, Ibarra V, et al. (2022). OpenSense: An open-source toolbox
+  for inertial-measurement-unit-based measurement of lower extremity kinematics
+  over long durations. *Journal of NeuroEngineering and Rehabilitation*, 19, 22.
+  [doi:10.1186/s12984-022-01001-x](https://doi.org/10.1186/s12984-022-01001-x)
+
+XML parsing uses [RapidXML](http://rapidxml.sourceforge.net/) 1.13, vendored
+under `external/rapidxml/` (Boost Software Licence / MIT).
 
 ## Examples
 
