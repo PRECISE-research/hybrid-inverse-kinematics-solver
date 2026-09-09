@@ -143,7 +143,7 @@ jobs:
       - name: Add README and licenses
         shell: pwsh
         run: |
-          Copy-Item README.md, LICENSE release/bin/
+          Copy-Item README.md, LICENSE, NOTICE release/bin/
           New-Item -ItemType Directory -Force release/bin/licenses | Out-Null
           Invoke-WebRequest "https://raw.githubusercontent.com/opensim-org/opensim-core/$env:OPENSIM_VERSION/LICENSE.txt" `
             -OutFile release/bin/licenses/OpenSim-LICENSE.txt

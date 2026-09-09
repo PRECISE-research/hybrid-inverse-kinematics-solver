@@ -228,9 +228,11 @@ under `external/rapidxml/` (Boost Software Licence / MIT).
 
 ## License
 
-MIT -- see [LICENSE](LICENSE), which also states the carve-out for third-party
-material: RapidXML is vendored under `external/rapidxml/` under its own terms,
-and the release archives bundle OpenSim and Simbody/SimTK under Apache-2.0.
+MIT -- see [LICENSE](LICENSE). Third-party material is carved out in
+[NOTICE](NOTICE): RapidXML is vendored under `external/rapidxml/` under its own
+terms, and the release archives bundle OpenSim and Simbody/SimTK under
+Apache-2.0. The carve-out is kept out of LICENSE deliberately -- any text
+appended there stops GitHub and Zenodo identifying the licence at all.
 
 Cite this tool via [CITATION.cff](CITATION.cff) (GitHub renders a "Cite this
 repository" button from it), and cite OpenSim alongside it -- see

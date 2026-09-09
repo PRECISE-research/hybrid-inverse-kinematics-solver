@@ -19,28 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-===============================================================================
-Third-party material
-===============================================================================
-
-The licence above covers the code in this repository. It does not cover
-third-party material distributed alongside it, which remains under its own
-terms:
-
-RapidXML 1.13  --  external/rapidxml/
-    Copyright (c) 2006, 2007 Marcin Kalicinski.
-    Dual-licensed under the Boost Software License 1.0 and the MIT License.
-    Full text: external/rapidxml/license.txt
-
-OpenSim and Simbody/SimTK  --  binary releases only
-    Copyright the OpenSim contributors and Stanford University.
-    Licensed under the Apache License 2.0.
-    Not present in this repository. The release archives published on the
-    releases page bundle these libraries so the tool runs without a separate
-    OpenSim installation; their licence text is included there under licenses/.
-
-Example data  --  examples/
-    Derived from trials collected by the PRECISE group and deidentified for
-    inclusion here. The musculoskeletal models are adaptations of published
-    OpenSim models; see the citations in README.md.
