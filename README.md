@@ -21,7 +21,7 @@ You do not need to build this, and you do not need OpenSim installed.
 3. Point it at a setup file:
 
 ```bash
-hybrid-inverse-kinematics-solver.exe -S path	o\ikSetup.xml
+hybrid-inverse-kinematics-solver.exe -S path\to\ikSetup.xml
 ```
 
 The zip carries the OpenSim and SimTK libraries next to the executable, so it
@@ -70,14 +70,15 @@ cmake --install build --config Release
 
 #### If the built exe exits immediately after printing its banner
 
-It found the wrong OpenSim DLLs. Windows resolves them by `PATH` order, so a
-machine with more than one OpenSim installed will happily load 4.5's DLLs into
-a binary linked against 4.4, and the process dies as soon as it touches one.
-Either run the **installed** copy from `install/bin` (which carries its own
-DLLs and is immune), or put the matching `bin` first:
+It loaded the wrong OpenSim DLLs: on a machine with more than one OpenSim
+installed, Windows takes whichever comes first on `PATH`, and a binary linked
+against 4.4 dies as soon as it touches 4.5's DLLs. The build copies the right
+DLLs next to the exe so this should not happen, but a build tree configured
+before that step existed lacks them. Rebuild, or put the matching `bin` first
+on `PATH`:
 
 ```bash
-PATH="/c/OpenSim 4.4/bin:$PATH" ./build/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
+PATH="/c/OpenSim 4.4/bin:$PATH" ./build/src/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
 ```
 
 ## Usage
@@ -249,7 +250,7 @@ Run any of them with `-S`; each writes `ik_results.sto` beside its setup file.
 | `examples/markers-cycling` | 74 optical markers, one pedal revolution | markers only, with weights spanning 0 to 1000 |
 
 ```bash
-./build/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
+./build/src/Release/hybrid-inverse-kinematics-solver.exe -S examples/imu-orientations/ikSetup.xml
 ```
 
 The example data is deidentified, and trimmed to what each solve actually needs.
