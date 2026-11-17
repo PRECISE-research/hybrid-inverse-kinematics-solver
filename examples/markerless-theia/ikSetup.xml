@@ -19,7 +19,6 @@
   <markers>
     <filePath>./markers.trc</filePath>
     <weights>
-      <markerWeight name="worldbody">1</markerWeight>
       <markerWeight name="pelvis">1</markerWeight>
       <markerWeight name="l_thigh">1</markerWeight>
       <markerWeight name="l_shank">1</markerWeight>
@@ -44,7 +43,6 @@
   <orientations>
     <filePath>./orientations.sto</filePath>
     <weights>
-      <orientationWeight name="worldbody">1</orientationWeight>
       <orientationWeight name="pelvis_imu">1</orientationWeight>
       <orientationWeight name="thigh_l_imu">1</orientationWeight>
       <orientationWeight name="shank_l_imu">1</orientationWeight>
