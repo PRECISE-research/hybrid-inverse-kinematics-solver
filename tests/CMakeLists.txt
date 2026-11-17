@@ -21,11 +21,11 @@ set(SOLVER       $<TARGET_FILE:hybrid-inverse-kinematics-solver>)
 # is a real change.
 #
 # markerless-theia is the only fixture tracking markers AND orientations in one
-# solve, and on this trial the two objectives genuinely disagree (the pelvis
-# rotations cannot be driven below ~1.5 deg RMS however they are weighted). That
+# solve, and the two objectives still disagree somewhat (hip rotation most). That
 # leaves a shallow minimum which different CPUs and BLAS paths resolve slightly
-# differently: a CI runner moves 37 of its 40 coordinates by up to ~0.4 deg
-# against references generated on a dev machine. 1.0 deg is loose enough to
+# differently: before the example's IMU frames were corrected, a CI runner moved
+# 37 of its 40 coordinates by up to ~0.4 deg against references generated on a
+# dev machine. 1.0 deg is loose enough to
 # absorb that and still an order of magnitude tighter than any regression this
 # suite has actually caught (the coordinate-weight and units bugs moved joints by
 # 24 to 133 deg). Do not tighten it without a hardware-independent fixture.
