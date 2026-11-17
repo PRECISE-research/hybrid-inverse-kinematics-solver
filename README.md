@@ -131,13 +131,25 @@ optional; supply whichever combination the trial calls for.
 
   <resultsOutputPath>./ik_results.sto</resultsOutputPath>
   <useVisualizer>false</useVisualizer>
-  <constraintWeight>10</constraintWeight>
+  <constraintWeight>Infinity</constraintWeight>  <!-- the default; see below -->
   <solverAccuracy>1e-05</solverAccuracy>
 </inverseKinematicsSetup>
 ```
 
 `<rotation>` is a space-fixed XYZ sequence in degrees, matching OpenSim's own
 OpenSense setup files.
+
+`<constraintWeight>` is best left at `Infinity`, which is also what you get
+without the element. Any finite value turns the model's constraints and locked
+coordinates into weighted goals rather than enforcing them, and the solver can
+then stop after a step or two on a frame. You won't get an error, just frames
+that freeze or jump and coordinates parked at their range limits. The tool
+prints a warning when the weight is finite and the model has constraints or
+locked coordinates.
+
+Numbers in the setup file are read strictly. `Inf` and `Infinity` are accepted
+for any weight, and a value with trailing text such as `10abc` is an error (or
+a skipped weight) rather than being read as `10`.
 
 Any element the parser does not recognise is reported as a warning rather than
 ignored, so typos and obsolete tags (`<applyRotation>`, superseded by
@@ -153,13 +165,14 @@ treated as errors. Alongside `resultsOutputPath` the tool writes
 ctest --test-dir build -C Release
 ```
 
-Twelve tests, about 8 seconds. They put the OpenSim the binary was built against
+Thirteen tests, about 10 seconds. They put the OpenSim the binary was built against
 first on `PATH` themselves, so they are immune to the multi-install problem above.
 
-**Error paths** (8, sub-second each) drive the setup-file parser with malformed
+**Error paths** (9, sub-second each) drive the setup-file parser with malformed
 input: unparseable XML, no root element, a missing `modelFilePath`, nothing to
-track, a weight with no `name`, a non-numeric weight, an unrecognised element,
-and a setup file that does not exist. Each asserts the exit code and the
+track, a weight with no `name`, a non-numeric weight, a non-numeric
+`constraintWeight`, an unrecognised element, and a setup file that does not
+exist. Each asserts the exit code and the
 message. Every one of these was a crash, an uninitialised read, or silence
 before the guards existed.
 
@@ -186,7 +199,7 @@ Configure with `-DBUILD_TESTING=OFF` to skip the tests, e.g. without Python.
 ## Continuous integration
 
 Every push runs `.github/workflows/continuous_integration.yml` on a Windows
-runner: configure, Release build, all 12 tests, and a bundling install that
+runner: configure, Release build, all 13 tests, and a bundling install that
 proves the executable's DLL set is complete. OpenSim 4.5.2 is downloaded once,
 pruned to ~80 MB, and cached -- later runs restore it in seconds. The golden
 references were produced with OpenSim 4.4; 4.5.2 reproduces them bit-for-bit,

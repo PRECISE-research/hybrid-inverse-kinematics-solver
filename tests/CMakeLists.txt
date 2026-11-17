@@ -76,6 +76,7 @@ set(ERROR_CASES
     "nothing_to_track|nothing_to_track.xml|nothing to track"
     "weight_missing_name|weight_no_name.xml|has no 'name' attribute"
     "weight_non_numeric|weight_non_numeric.xml|has a non-numeric value"
+    "constraint_weight_non_numeric|constraint_weight_non_numeric.xml|is not a non-negative number"
     "unrecognised_element|unknown_element.xml|unrecognised element 'applyRotation'"
     "missing_setup_file|no_such_file.xml|failed to open cfg file")
 
