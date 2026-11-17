@@ -43,10 +43,21 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_L
     target_link_libraries(hybrid-inverse-kinematics-solver PRIVATE stdc++fs)
 endif()
 
-# Quality of life: F5 in Visual Studio finds the OpenSim DLLs without putting
-# them on the system PATH. Silently ignored by every other generator.
-set_property(TARGET hybrid-inverse-kinematics-solver PROPERTY
-    VS_DEBUGGER_ENVIRONMENT "PATH=${OpenSim_BIN_DIR};%PATH%")
+# Copy the OpenSim DLLs next to the built .exe. Windows looks beside the .exe
+# before PATH, so the build-tree copy now loads the OpenSim it was linked
+# against. Without this, a machine with several OpenSim versions installed loads
+# whichever comes first on PATH, and a mismatch crashes the tool silently right
+# after its banner.
+if(WIN32)
+    add_custom_command(TARGET hybrid-inverse-kinematics-solver POST_BUILD
+        COMMAND "${CMAKE_COMMAND}"
+            "-DEXE=$<TARGET_FILE:hybrid-inverse-kinematics-solver>"
+            "-DSEARCH_DIR=${OpenSim_BIN_DIR}"
+            -P "${PROJECT_SOURCE_DIR}/cmake/CopyRuntimeDlls.cmake"
+        COMMENT "Copying OpenSim DLLs next to hybrid-inverse-kinematics-solver.exe"
+        VERBATIM
+    )
+endif()
 
 # -----------------------------------------------------------------------------
 # Install
