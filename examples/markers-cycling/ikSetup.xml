@@ -90,6 +90,5 @@
   </markers>
   <resultsOutputPath>./ik_results.sto</resultsOutputPath>
   <useVisualizer>false</useVisualizer>
-  <constraintWeight>10</constraintWeight>
   <solverAccuracy>1e-05</solverAccuracy>
 </inverseKinematicsSetup>

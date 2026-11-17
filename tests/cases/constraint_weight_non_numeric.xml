@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A constraintWeight with trailing junk. Stream extraction used to read "10abc"
+     as 10, and "Infinity" as a failure that left 0. -->
+<inverseKinematicsSetup version="1.0">
+  <modelFilePath>./does_not_exist.osim</modelFilePath>
+  <markers>
+    <filePath>./does_not_exist.trc</filePath>
+    <weights>
+      <markerWeight name="RASI">1</markerWeight>
+    </weights>
+  </markers>
+  <constraintWeight>10abc</constraintWeight>
+</inverseKinematicsSetup>

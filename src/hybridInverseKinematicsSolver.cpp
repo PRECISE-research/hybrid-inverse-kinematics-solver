@@ -10,6 +10,7 @@
 #include <chrono>
 #include <iomanip>
 #include <cstdlib>
+#include <cctype>
 
 #include <OpenSim.h>
 #include <rapidxml.hpp>
@@ -47,6 +48,51 @@ static void warnUnknownChildren(rapidxml::xml_node<>* parent, const std::string&
 	}
 }
 
+// Parse a non-negative number, accepting "Inf"/"Infinity" (any case). The whole
+// text must be the number: plain stream extraction reads "Infinity" as a failure
+// that leaves 0, and reads "10abc" as 10.
+static bool parseNonNegativeDouble(const std::string& text, double& valueOut) {
+	const char* ws = " \t\r\n";
+	auto first = text.find_first_not_of(ws);
+	if (first == std::string::npos)
+		return false;
+	auto last = text.find_last_not_of(ws);
+	std::string token = text.substr(first, last - first + 1);
+
+	std::string lower;
+	for (char c : token)
+		lower += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	if (!lower.empty() && lower[0] == '+')
+		lower.erase(0, 1);
+	if (lower == "inf" || lower == "infinity") {
+		valueOut = SimTK::Infinity;
+		return true;
+	}
+
+	std::istringstream strm(token);
+	double value;
+	if (!(strm >> value))
+		return false;
+	std::string trailing;
+	if (strm >> trailing)
+		return false;
+	if (!(value >= 0.))            // also rejects NaN
+		return false;
+	valueOut = value;
+	return true;
+}
+
+// Read a top-level node that must hold a non-negative number, exiting with a
+// message that names the offending text.
+static void readNonNegativeDoubleNode(rapidxml::xml_node<>* node, const std::string& nodeName,
+	double& valueOut) {
+	if (!parseNonNegativeDouble(node->value(), valueOut)) {
+		std::cout << "Error: <" << nodeName << "> in cfg file has value '" << node->value()
+			<< "', which is not a non-negative number" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
 // Read one "<xWeight name=\"foo\">1.0</xWeight>" entry. Returns false (and warns)
 // rather than dereferencing a missing attribute or leaving the value uninitialised.
 static bool readWeightNode(rapidxml::xml_node<>* node, const std::string& blockName,
@@ -57,10 +103,9 @@ static bool readWeightNode(rapidxml::xml_node<>* node, const std::string& blockN
 		return false;
 	}
 	nameOut = attr->value();
-	std::istringstream strm(node->value());
-	if (!(strm >> valueOut)) {
+	if (!parseNonNegativeDouble(node->value(), valueOut)) {
 		std::cout << "Warning: " << blockName << "->weights entry '" << nameOut
-			<< "' has a non-numeric value, skipping" << std::endl;
+			<< "' has a non-numeric value or a negative one, skipping" << std::endl;
 		return false;
 	}
 	return true;
@@ -68,8 +113,10 @@ static bool readWeightNode(rapidxml::xml_node<>* node, const std::string& blockN
 
 InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	std::filesystem::path filePath(path);
-	// TODO: this doesn't seem to work for everyone (i.e., Matt W)
-	std::string parentFolder = filePath.parent_path().string();
+	// Relative paths in the file are resolved against the file's own folder. Made
+	// absolute first: a bare "ikSetup.xml" has an empty parent_path(), and joining
+	// "" + "/" + "./model.osim" pointed at the root of the drive.
+	const std::filesystem::path parentFolder = std::filesystem::absolute(filePath).parent_path();
 
 	InverseKinematicsConfigurationFile cfgDetails;
 
@@ -111,7 +158,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	if (rootNode->first_node("modelFilePath")) {
 		std::filesystem::path modelPath(rootNode->first_node("modelFilePath")->value());
 		if (modelPath.is_relative())
-			cfgDetails.modelFilePath = parentFolder + "/" + modelPath.string();
+			cfgDetails.modelFilePath = (parentFolder / modelPath).string();
 		else
 			cfgDetails.modelFilePath = modelPath.string();
 	}
@@ -127,7 +174,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 		if (markersNode->first_node("filePath")) {
 			std::filesystem::path markersPath(markersNode->first_node("filePath")->value());
 			if (markersPath.is_relative())
-				cfgDetails.markersFilePath = parentFolder + "/" + markersPath.string();
+				cfgDetails.markersFilePath = (parentFolder / markersPath).string();
 			else
 				cfgDetails.markersFilePath = markersPath.string();
 		}
@@ -166,7 +213,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 		if (orientationsNode->first_node("filePath")) {
 			std::filesystem::path orientationsPath(orientationsNode->first_node("filePath")->value());
 			if (orientationsPath.is_relative())
-				cfgDetails.orientationsFilePath = parentFolder + "/" + orientationsPath.string();
+				cfgDetails.orientationsFilePath = (parentFolder / orientationsPath).string();
 			else
 				cfgDetails.orientationsFilePath = orientationsPath.string();
 		}
@@ -217,7 +264,7 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 		if (coordinatesNode->first_node("filePath")) {
 			std::filesystem::path coordinatesPath(coordinatesNode->first_node("filePath")->value());
 			if (coordinatesPath.is_relative())
-				cfgDetails.coordinatesFilePath = parentFolder + "/" + coordinatesPath.string();
+				cfgDetails.coordinatesFilePath = (parentFolder / coordinatesPath).string();
 			else
 				cfgDetails.coordinatesFilePath = coordinatesPath.string();
 		}
@@ -259,12 +306,12 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 	if (rootNode->first_node("resultsOutputPath")) {
 		std::filesystem::path resultsPath(rootNode->first_node("resultsOutputPath")->value());
 		if (resultsPath.is_relative())
-			cfgDetails.resultsOutputPath = parentFolder + "/" + resultsPath.string();
+			cfgDetails.resultsOutputPath = (parentFolder / resultsPath).string();
 		else
 			cfgDetails.resultsOutputPath = resultsPath.string();
 	}
 	else {
-		cfgDetails.resultsOutputPath = parentFolder + "/ik_results.sto";
+		cfgDetails.resultsOutputPath = (parentFolder / "ik_results.sto").string();
 		std::cout << "Warning: no resultsOutputPath node available in cfg file, using '" << cfgDetails.resultsOutputPath << "'" << std::endl;
 	}
 
@@ -275,14 +322,17 @@ InverseKinematicsConfigurationFile readCfgFile(std::string path) {
 			cfgDetails.useVisualizer = false;
 	}
 
-	if (rootNode->first_node("constraintWeight")) {
-		std::istringstream myStrm(rootNode->first_node("constraintWeight")->value());
-		myStrm >> cfgDetails.constraintWeight;
-	}
+	if (rootNode->first_node("constraintWeight"))
+		readNonNegativeDoubleNode(rootNode->first_node("constraintWeight"), "constraintWeight",
+			cfgDetails.constraintWeight);
 
 	if (rootNode->first_node("solverAccuracy")) {
-		std::istringstream myStrm(rootNode->first_node("solverAccuracy")->value());
-		myStrm >> cfgDetails.solverAccuracy;
+		readNonNegativeDoubleNode(rootNode->first_node("solverAccuracy"), "solverAccuracy",
+			cfgDetails.solverAccuracy);
+		if (cfgDetails.solverAccuracy <= 0. || cfgDetails.solverAccuracy == SimTK::Infinity) {
+			std::cout << "Error: <solverAccuracy> must be a positive, finite number" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (cfgDetails.markersFilePath == "none" && cfgDetails.orientationsFilePath == "none" && cfgDetails.coordinatesFilePath == "none") {
@@ -508,7 +558,28 @@ int main(int argc, char** argv) {
 		
 	model.setUseVisualizer(ikCfg.useVisualizer);
 	SimTK::State state = model.initSystem();
-	
+
+	// A finite constraintWeight turns the model's constraints (and locked
+	// coordinates) into weighted goal terms. Simbody then switches optimiser, and
+	// on these problems it can stop after a step or two: frames freeze or jump and
+	// coordinates park at their range limits, with no error reported.
+	if (ikCfg.constraintWeight != SimTK::Infinity) {
+		int nConstraints = 0;
+		for (const auto& c : model.getComponentList<OpenSim::Constraint>())
+			if (c.isEnforced(state))
+				++nConstraints;
+		int nLocked = 0;
+		for (const auto& c : model.getComponentList<OpenSim::Coordinate>())
+			if (c.getLocked(state))
+				++nLocked;
+		if (nConstraints > 0 || nLocked > 0)
+			std::cout << "Warning: constraintWeight is " << ikCfg.constraintWeight
+				<< ", so the model's " << nConstraints << " constraint(s) and " << nLocked
+				<< " locked coordinate(s) are only weighted goals, not enforced. Finite weights"
+				<< " can make the solver stop early, leaving frozen or jumping frames. Use"
+				<< " Infinity (the default) unless you need soft constraints." << std::endl;
+	}
+
 	// Create IK solver
 	OpenSim::InverseKinematicsSolver ikSolver(model, mRefs, oRefs, cRefs, ikCfg.constraintWeight);
 	ikSolver.setAccuracy(ikCfg.solverAccuracy);

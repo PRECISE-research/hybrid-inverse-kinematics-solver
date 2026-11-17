@@ -21,6 +21,6 @@
   </orientations>
   <resultsOutputPath>../../examples/imu-orientations/ik_rotation90.sto</resultsOutputPath>
   <useVisualizer>false</useVisualizer>
-  <constraintWeight>10</constraintWeight>
+  <constraintWeight>Infinity</constraintWeight>
   <solverAccuracy>1e-05</solverAccuracy>
 </inverseKinematicsSetup>

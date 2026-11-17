@@ -6,13 +6,19 @@
   segment rotations from the same trial are tracked as orientations, in a single
   solve. Several arm markers and orientations are not present in this model and
   are reported as warnings; they are simply skipped.
+
+  Theia's segment axes do not line up with this model's body axes, so each
+  *_imu frame in model.osim carries a fixed rotation (about 80-150 deg) that
+  maps one onto the other. These were estimated from this trial: solve with the
+  markers only, then take each IMU's average rotation relative to its body.
+  With the frames left at zero the orientations fight the markers and the
+  solution is badly wrong (e.g. pelvis rotation about 86 deg off).
 -->
 <inverseKinematicsSetup version="1.0">
   <modelFilePath>./model.osim</modelFilePath>
   <markers>
     <filePath>./markers.trc</filePath>
     <weights>
-      <markerWeight name="worldbody">1</markerWeight>
       <markerWeight name="pelvis">1</markerWeight>
       <markerWeight name="l_thigh">1</markerWeight>
       <markerWeight name="l_shank">1</markerWeight>
@@ -37,7 +43,6 @@
   <orientations>
     <filePath>./orientations.sto</filePath>
     <weights>
-      <orientationWeight name="worldbody">1</orientationWeight>
       <orientationWeight name="pelvis_imu">1</orientationWeight>
       <orientationWeight name="thigh_l_imu">1</orientationWeight>
       <orientationWeight name="shank_l_imu">1</orientationWeight>
@@ -62,6 +67,5 @@
   </orientations>
   <resultsOutputPath>./ik_results.sto</resultsOutputPath>
   <useVisualizer>false</useVisualizer>
-  <constraintWeight>10</constraintWeight>
   <solverAccuracy>1e-05</solverAccuracy>
 </inverseKinematicsSetup>
