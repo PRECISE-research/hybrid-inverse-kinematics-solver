@@ -177,7 +177,9 @@ message. Every one of these was a crash, an uninitialised read, or silence
 before the guards existed.
 
 **Golden-file regression** (4) solves each example and compares the resulting
-`.sto` against a committed reference, column by column, to a tolerance of 1e-6.
+`.sto` against a committed reference, column by column. The tolerance is 1e-6
+where results reproduce exactly on any machine, and 1-5 degrees where weakly
+constrained joints vary between CPUs (see `tests/CMakeLists.txt`).
 The three examples cover the three tracking paths; `tests/cases/rotation_90.xml`
 adds a fourth because every shipped example uses `<rotation>0. 0. 0.</rotation>`,
 which makes the degrees-to-radians conversion a no-op and would leave that path

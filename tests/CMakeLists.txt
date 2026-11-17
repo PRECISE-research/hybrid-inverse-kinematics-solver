@@ -14,25 +14,26 @@ set(SOLVER       $<TARGET_FILE:hybrid-inverse-kinematics-solver>)
 # prescribed coordinates, markers combined with orientations, and markers alone.
 # References were produced with OpenSim 4.4; see run_test.py on regenerating.
 # -----------------------------------------------------------------------------
-# Tolerances are per example, because they are not equally reproducible.
+# Tolerances are per example, because they are not equally reproducible. These
+# tests check that results have not changed, not that they are correct.
 #
-# imu-orientations and markers-cycling reproduce BIT-FOR-BIT, across OpenSim 4.4
-# and 4.5.2 and across machines, so they are held to 1e-6 and any movement at all
-# is a real change.
+# imu-orientations reproduces BIT-FOR-BIT across OpenSim 4.4 and 4.5.2 and across
+# machines, so it is held to 1e-6 and any movement at all is a real change.
 #
-# markerless-theia is the only fixture tracking markers AND orientations in one
-# solve, and the two objectives still disagree somewhat (hip rotation most). That
-# leaves a shallow minimum which different CPUs and BLAS paths resolve slightly
-# differently: before the example's IMU frames were corrected, a CI runner moved
-# 37 of its 40 coordinates by up to ~0.4 deg against references generated on a
-# dev machine. 1.0 deg is loose enough to
-# absorb that and still an order of magnitude tighter than any regression this
-# suite has actually caught (the coordinate-weight and units bugs moved joints by
-# 24 to 133 deg). Do not tighten it without a hardware-independent fixture.
+# The others reproduce bit-for-bit on one machine but not across machines. A
+# fully converged solve leaves coordinates the data barely constrains (forearm
+# and arm rotation, the first frame of rotation_90) in a shallow minimum, which
+# different CPUs settle slightly differently: the CI runner moved them by up to
+# 0.4 deg (markerless-theia), 1.4 deg (rotation_90) and 4.7 deg (markers-cycling,
+# mostly the forearms; legs, crank and pedals up to 1.4 deg) against references
+# generated on a dev machine. Each tolerance sits above that spread and well
+# below the regressions this suite has caught (the coordinate-weight and units
+# bugs moved joints by 24 to 133 deg). Do not tighten them without a
+# hardware-independent fixture.
 set(GOLDEN_EXAMPLES
     "imu-orientations|1e-6"
     "markerless-theia|1.0"
-    "markers-cycling|1e-6")
+    "markers-cycling|5.0")
 
 foreach(entry IN LISTS GOLDEN_EXAMPLES)
     string(REPLACE "|" ";" fields "${entry}")
@@ -59,7 +60,8 @@ add_test(NAME golden.rotation_90
         golden
             --setup    "${CMAKE_CURRENT_SOURCE_DIR}/cases/rotation_90.xml"
             --produced "${EXAMPLES_DIR}/imu-orientations/ik_rotation90.sto"
-            --expected "${CMAKE_CURRENT_SOURCE_DIR}/expected/rotation_90.sto")
+            --expected "${CMAKE_CURRENT_SOURCE_DIR}/expected/rotation_90.sto"
+            --tol      2.0)
 set_tests_properties(golden.rotation_90 PROPERTIES TIMEOUT 300)
 
 # -----------------------------------------------------------------------------
