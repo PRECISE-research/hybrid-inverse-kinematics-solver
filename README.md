@@ -45,6 +45,9 @@ Build from source only if you are changing the tool.
 | CMake | 3.21+ | 3.31.8 used here; 3.21 is the hard floor |
 | Compiler | MSVC 19.44 (VS 2022) | C++17 |
 
+Windows is the tested platform. Linux and macOS should build from source
+against an OpenSim built for them, but are untested.
+
 ### Build
 
 OpenSim cannot be found automatically, so its path is passed explicitly
