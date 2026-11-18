@@ -249,6 +249,10 @@ produced with it, cite OpenSim as well as this repository:
 XML parsing uses [RapidXML](http://rapidxml.sourceforge.net/) 1.13, vendored
 under `external/rapidxml/` (Boost Software Licence / MIT).
 
+## Contributing
+
+Bug reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT -- see [LICENSE](LICENSE). Third-party material is carved out in
