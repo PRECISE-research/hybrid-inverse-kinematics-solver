@@ -252,6 +252,7 @@ under `external/rapidxml/` (Boost Software Licence / MIT).
 ## Contributing
 
 Bug reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Report security problems privately, as [SECURITY.md](SECURITY.md) describes.
 
 ## License
 
