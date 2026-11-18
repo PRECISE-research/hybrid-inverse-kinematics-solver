@@ -1,22 +1,73 @@
-Third-party material
-====================
+hybrid-inverse-kinematics-solver
+Copyright 2026 Matthew Hambly and contributors, Griffith University
 
 The MIT licence in LICENSE covers the code in this repository. It does not cover
-third-party material distributed alongside it, which remains under its own terms:
+the third-party material below, which stays under its own terms. Keep these
+notices with the files if you redistribute them.
 
-RapidXML 1.13  --  external/rapidxml/
-    Copyright (c) 2006, 2007 Marcin Kalicinski.
-    Dual-licensed under the Boost Software License 1.0 and the MIT License.
-    Full text: external/rapidxml/license.txt
+1. RapidXML 1.13  --  external/rapidxml/
+   Copyright (c) 2006, 2007 Marcin Kalicinski.
+   Dual-licensed under the Boost Software License 1.0 and the MIT License.
+   Full text: external/rapidxml/license.txt
 
-OpenSim and Simbody/SimTK  --  binary releases only
-    Copyright the OpenSim contributors and Stanford University.
-    Licensed under the Apache License 2.0.
-    Not present in this repository. The release archives published on the
-    releases page bundle these libraries so the tool runs without a separate
-    OpenSim installation; their licence text is included there under licenses/.
+2. OpenSim and Simbody/SimTK  --  release archives only
+   Copyright the OpenSim contributors and Stanford University.
+   Licensed under the Apache License 2.0.
+   Not present in this repository. The release archives bundle these libraries
+   so the tool runs without a separate OpenSim installation; their licence text
+   is included there under licenses/.
 
-Example data  --  examples/
-    Derived from trials collected by the PRECISE group and deidentified for
-    inclusion here. The musculoskeletal models are adaptations of published
-    OpenSim models; see the citations in README.md.
+3. Example models  --  examples/*/model.osim
+   The models are scaled or adapted copies of published OpenSim models:
+   - examples/markerless-theia and examples/markers-cycling: the
+     RajagopalLaiUhlrich2023 model, which derives from the Rajagopal et al.
+     (2016) full-body model (https://simtk.org/projects/full_body) with the
+     Lai et al. (2017) and Uhlrich et al. (2022) modifications.
+   - examples/imu-orientations: the Catelli et al. (2019) high hip flexion
+     model (https://simtk.org/projects/high-hip-flex), itself built on the
+     Rajagopal et al. (2016) and Lai et al. (2017) models.
+
+   Both source models are published under the MIT licence:
+
+       Copyright (c) 2015, Stanford University (full-body model)
+       Copyright (c) 2016, Stanford University (high hip flexion model)
+
+       Permission is hereby granted, free of charge, to any person obtaining a
+       copy of this software and associated documentation files (the
+       "Software"), to deal in the Software without restriction, including
+       without limitation the rights to use, copy, modify, merge, publish,
+       distribute, sublicense, and/or sell copies of the Software, and to
+       permit persons to whom the Software is furnished to do so, subject to
+       the following conditions:
+
+       The above copyright notice and this permission notice shall be included
+       in all copies or substantial portions of the Software.
+
+       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+       OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+       MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+       IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+       CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+       TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   Cite:
+   - Rajagopal A, Dembia CL, DeMers MS, Delp DD, Hicks JL, Delp SL (2016).
+     Full-body musculoskeletal model for muscle-driven simulation of human
+     gait. IEEE Transactions on Biomedical Engineering 63(10):2068-2079.
+     doi:10.1109/TBME.2016.2586891
+   - Lai AKM, Arnold AS, Wakeling JM (2017). Why are antagonist muscles
+     co-activated in my simulation? A musculoskeletal model for analysing human
+     locomotor tasks. Annals of Biomedical Engineering 45(12):2762-2774.
+     doi:10.1007/s10439-017-1920-7
+   - Uhlrich SD, Jackson RW, Seth A, Kolesar JA, Delp SL (2022). Muscle
+     coordination retraining inspired by musculoskeletal simulations reduces
+     knee contact force. Scientific Reports 12:9842.
+     doi:10.1038/s41598-022-13386-9
+   - Catelli DS, Wesseling M, Jonkers I, Lamontagne M (2019). A musculoskeletal
+     model customized for squatting task. Computer Methods in Biomechanics and
+     Biomedical Engineering 22(1):21-24. doi:10.1080/10255842.2018.1523396
+
+4. Example data  --  examples/*/ (marker, orientation and coordinate files)
+   Short, deidentified excerpts of trials collected by the PRECISE group at
+   Griffith University, included only to demonstrate and test the tool.

@@ -45,6 +45,9 @@ Build from source only if you are changing the tool.
 | CMake | 3.21+ | 3.31.8 used here; 3.21 is the hard floor |
 | Compiler | MSVC 19.44 (VS 2022) | C++17 |
 
+Windows is the tested platform. Linux and macOS should build from source
+against an OpenSim built for them, but are untested.
+
 ### Build
 
 OpenSim cannot be found automatically, so its path is passed explicitly
@@ -205,14 +208,18 @@ Every push runs `.github/workflows/continuous_integration.yml` on a Windows
 runner: configure, Release build, all 13 tests, and a bundling install that
 proves the executable's DLL set is complete. OpenSim 4.5.2 is downloaded once,
 pruned to ~80 MB, and cached -- later runs restore it in seconds. The golden
-references were produced with OpenSim 4.4; 4.5.2 reproduces them bit-for-bit,
-which is why CI can use it.
+references were produced with OpenSim 4.4. CI's results match them exactly for
+imu-orientations and to within the tolerances in `tests/CMakeLists.txt` for the
+others, because weakly constrained joints settle slightly differently on
+different CPUs.
 
 ### Cutting a release
 
 1. Bump `project(VERSION X.Y.Z)` in `CMakeLists.txt` -- the tool's banner
    prints this, and the release workflow refuses a tag that disagrees with it.
-2. `git tag X.Y.Z && git push origin X.Y.Z`
+2. Add the release to [CHANGELOG.md](CHANGELOG.md), and set `version` and
+   `date-released` in `CITATION.cff`.
+3. `git tag X.Y.Z && git push origin X.Y.Z`
 
 The tag triggers `.github/workflows/github_release.yml`, which rebuilds, reruns
 the full test suite, and attaches
@@ -242,12 +249,17 @@ produced with it, cite OpenSim as well as this repository:
 XML parsing uses [RapidXML](http://rapidxml.sourceforge.net/) 1.13, vendored
 under `external/rapidxml/` (Boost Software Licence / MIT).
 
+## Contributing
+
+Bug reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT -- see [LICENSE](LICENSE). Third-party material is carved out in
 [NOTICE](NOTICE): RapidXML is vendored under `external/rapidxml/` under its own
-terms, and the release archives bundle OpenSim and Simbody/SimTK under
-Apache-2.0. The carve-out is kept out of LICENSE deliberately -- any text
+terms, the release archives bundle OpenSim and Simbody/SimTK under Apache-2.0,
+and the example models are adapted from MIT-licensed OpenSim models, whose
+notices and citations are listed there. The carve-out is kept out of LICENSE deliberately -- any text
 appended there stops GitHub and Zenodo identifying the licence at all.
 
 Cite this tool via [CITATION.cff](CITATION.cff) (GitHub renders a "Cite this
@@ -269,8 +281,10 @@ Run any of them with `-S`; each writes `ik_results.sto` beside its setup file.
 ```
 
 The example data is deidentified, and trimmed to what each solve actually needs.
-The cycling trial is truncated to its first 800 frames (4 s at 200 Hz, one
-revolution at 15 rpm) from an original 57,266.
+The cycling trial is cut to 800 frames (4 s at 200 Hz, one revolution at
+15 rpm) from an original 57,266. In the Theia example, each IMU frame in the
+model carries a fixed rotation onto the Theia segment axes; the setup file
+explains how it was estimated.
 
 `Geometry/` folders are **not** included — the `.vtp`/`.stl` meshes are display
 only and add ~130 MB per example. OpenSim logs a `Couldn't find file` warning

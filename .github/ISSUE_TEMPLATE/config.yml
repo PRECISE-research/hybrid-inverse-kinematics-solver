@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/PRECISE-research/hybrid-inverse-kinematics-solver#readme
+    about: Building, the setup file format, and the examples.
